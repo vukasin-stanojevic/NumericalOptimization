@@ -23,12 +23,13 @@ void simple_gradient_descent(
 	grad_t g)
 {
 	int steps = 0;
-	while (norm(g(x0)) > 1e-7 && steps++ < 100) {
+	while (norm(g(x0)) > 1e-8 && steps++ < 100) {
 		cerr << x0 << "   grad: ";
 		cerr << g(x0) << '\n';
-		x0 += g(x0) * line_search(ls_method, x0, g(x0), f, g, {});
+		auto p = g(x0) * -1;
+		x0 += p * line_search(ls_method, x0, p, f, g, {});
 	}
-
+	cerr << "steps = " << steps << '\n';
 }
 
 int main() {
@@ -37,5 +38,6 @@ int main() {
 	cout.tie(nullptr);
 	cerr.tie(nullptr);
 
+	simple_gradient_descent("wolfe", vecd{1.0, 1.0}, f1, g1);
 	simple_gradient_descent("armijo", vecd{1.0, 1.0}, f1, g1);
 }
