@@ -38,6 +38,8 @@ int main() {
 	cout.tie(nullptr);
 	cerr.tie(nullptr);
 
-	simple_gradient_descent("wolfe", vecd{1.0, 1.0}, f1, g1);
 	simple_gradient_descent("armijo", vecd{1.0, 1.0}, f1, g1);
+	simple_gradient_descent("wolfe", vecd{1.0, 1.0}, f1, g1);
+	simple_gradient_descent("strong_wolfe", vecd{1.0, 1.0}, f1, g1);
+	simple_gradient_descent("goldstein", vecd{1.0, 1.0}, f1, g1);
 }
