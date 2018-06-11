@@ -209,6 +209,10 @@ public:
 		return tmp;
 	}
 
+	vec operator- () const {
+		return *this * -1;
+	}
+
 	// Skalarni proizvod
 	T inner(const vec& x) const {
 		check_dims(x);

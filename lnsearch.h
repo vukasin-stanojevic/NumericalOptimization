@@ -277,6 +277,10 @@ real goldstein(
 	return a;
 }
 
+template<class real>
+real fixed_line_search(real initial_step) {
+	return initial_step;
+}
 
 template<class real, class func_t, class grad_t>
 real line_search(
@@ -348,6 +352,12 @@ real line_search(
 			p["steepness"],
 			p["initial_step"],
 			p["gamma"]);
+	}
+
+	if (method_name == "fixed_line_search") {
+		p["initial_step"] = 1;
+		rest();
+		return fixed_line_search(p["initial_step"]);
 	}
 
 	throw "unknown method name";
