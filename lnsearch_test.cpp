@@ -36,7 +36,7 @@ void simple_gradient_descent(
 	grad_t g,
 	map<string, real> params = {})
 {
-	int steps = 0;
+	size_t steps = 0;
 	while (norm(g(x0)) > 1e-8 && steps++ < 1000) {
 		cerr << x0 << "   grad: ";
 		cerr << g(x0) << '\n';
@@ -44,6 +44,25 @@ void simple_gradient_descent(
 		x0 += p * line_search(ls_method, x0, p, f, g, params);
 	}
 	cerr << "steps = " << steps << '\n';
+}
+
+template<class real, class func_t, class grad_t>
+void momentum(
+	string ls_method,
+	vec<real> x0,
+	func_t f,
+	grad_t g,
+	map<string, real> params = {})
+{
+	int steps = 0;
+	auto p = -g(x0);
+	while (norm(g(x0)) > 1e-7 && steps++ < 1000) {
+		cerr << x0 << "   gnorm = " << norm(g(x0)) << '\n';
+		p = p * 0.9 - g(x0) * 0.1;
+		x0 += p * line_search(ls_method, x0, p, f, g, params);
+	}
+	cerr << "steps = " << steps << '\n';
+
 }
 
 int main() {
@@ -56,11 +75,14 @@ int main() {
 	auto g = g2;
 	vecd x0 = {0.0, 0.0};
 
-	simple_gradient_descent("armijo", x0, f, g);
-	simple_gradient_descent("wolfe", x0, f, g);
-	simple_gradient_descent("strong_wolfe", x0, f, g);
-	simple_gradient_descent("goldstein", x0, f, g,
-		{{"steepness", 0.1}});
-	simple_gradient_descent("fixed_line_search", x0, f, g,
-		{{"initial_step", 0.001}});
+	// simple_gradient_descent("armijo", x0, f, g);
+	// simple_gradient_descent("wolfe", x0, f, g);
+	// simple_gradient_descent("strong_wolfe", x0, f, g);
+	// simple_gradient_descent("goldstein", x0, f, g,
+	// 	{{"steepness", 0.1}});
+	// simple_gradient_descent("fixed_line_search", x0, f, g,
+	// 	{{"initial_step", 0.001}});
+	cerr.precision(20);
+	cerr << fixed;
+	momentum("armijo", x0, f, g);	
 }

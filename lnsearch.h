@@ -254,7 +254,7 @@ real goldstein(
 	real ff = f(x0 + d*a);
 	size_t steps = 1;
 
-	while (1) {
+	while (steps < 52) {
 		if (ff > f0 + steepness*a*pad) {
 			a2 = a;
 			a2inf = false;
