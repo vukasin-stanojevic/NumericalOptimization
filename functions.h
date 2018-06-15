@@ -121,6 +121,126 @@ la::vec<real> full_hessian_fh2_x0(size_t n) {
 	return la::vec<real>(n, 0.01);
 }
 
+// Extended quadratic penalty QP2 7/6 (extended_qp2)
+
+template<class real>
+real extended_qp2_f(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "extended_qp2: n must be positive";
+	real z = 0;
+	for (size_t i=0; i<v.size()-1; i++) {
+		real t = v[i]*v[i] - sin(v[i]);
+		z += t*t;
+	}
+	real p = -100;
+	for (size_t i=0; i<v.size(); i++)
+		p += v[i]*v[i];
+	z += p*p;
+	return z;
+}
+
+template<class real>
+la::vec<real> extended_qp2_g(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "extended_qp2: n must be positive";
+	la::vec<real> z(v.size(), 0.0);
+	for (size_t i=0; i<v.size()-1; i++)
+		z[i] += 2*(2*v[i]-cos(v[i]))*(v[i]*v[i] - sin(v[i]));
+	real t = -100;
+	for (size_t i=0; i<v.size(); i++)
+		t += v[i]*v[i];
+	for (size_t i=0; i<v.size(); i++)
+		z[i] += 4*v[i]*t;
+	return z;
+}
+
+template<class real>
+la::vec<real> extended_qp2_x0(size_t n) {
+	if (n == 0)
+		throw "extended_qp2: n must be positive";
+	return la::vec<real>(n, 0.5);	
+}
+
+// Partial Perturbed Quadratic 9/-1 (pp_quad)
+
+template<class real>
+real pp_quad_f(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "pp_quad: n must be positive";
+	real z = 0;
+	z += v[0]*v[0];
+	real ps = 0;
+	for (size_t i=0; i<v.size(); i++) {
+		ps += v[i];
+		z += v[i]*v[i]*(i+1);
+		z += ps*ps / 100;
+	}
+	return z;
+}
+
+template<class real>
+la::vec<real> pp_quad_g(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "pp_quad: n must be positive";
+	la::vec<real> z(v.size(), 0.0);
+	la::vec<real> ps(v.size());
+	ps[0] = v[0];
+	real t = 0;
+	for (size_t i=1; i<v.size(); i++)
+		ps[i] = ps[i-1] + v[i];
+	for (size_t i=0; i<v.size(); i++)
+		t += v[i] * (v.size() - i) * 2;
+
+	z[0] = t / 100 + v[0] * 4;
+	for (size_t i=1; i<v.size(); i++) {
+		t -= 2*ps[i-1];
+		z[i] = t / 100 + v[i] * (i+1) * 2;
+	}
+	return z;
+}
+
+template<class real>
+la::vec<real> pp_quad_x0(size_t n) {
+	if (n == 0)
+		throw "pp_quad: n must be positive";
+	return la::vec<real>(n, 0.5);
+}
+
+// EXPLIN1 11/4 (explin1)
+
+template<class real>
+real explin1_f(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "explin1: n must be positive";
+	real z = 0;
+	for (size_t i=0; i<v.size()-1; i++)
+		z += exp(0.1 * v[i] * v[i+1]);
+	for (size_t i=0; i<v.size(); i++)
+		z -= v[i] * 10 * (i+1);
+	return z;
+}
+
+template<class real>
+la::vec<real> explin1_g(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "explin1: n must be positive";
+	la::vec<real> z(v.size(), 0.0);
+	for (size_t i=0; i<v.size()-1; i++) {
+		z[i] += exp(v[i]*v[i+1] / 10) * v[i+1] / 10;
+		z[i+1] += exp(v[i]*v[i+1] / 10) * v[i] / 10;
+	}
+	for (size_t i=0; i<v.size(); i++)
+		z[i] -= (real)10*(i+1);
+	return z;
+}
+
+template<class real>
+la::vec<real> explin1_x0(size_t n) {
+	if (n == 0)
+		throw "explin1: n must be positive";
+	return la::vec<real>(n, 0.0);
+}
+
 // Za izvoz!
 
 template<class real>
@@ -129,6 +249,12 @@ auto function(std::string name) {
 		return extended_psc1_f<real>;
 	if (name == "full_hessian_fh2")
 		return full_hessian_fh2_f<real>;
+	if (name == "extended_qp2")
+		return extended_qp2_f<real>;
+	if (name == "pp_quad")
+		return pp_quad_f<real>;
+	if (name == "explin1")
+		return explin1_f<real>;
 	throw "function not implemented";
 }
 
@@ -138,6 +264,12 @@ auto gradient(std::string name) {
 		return extended_psc1_g<real>;
 	if (name == "full_hessian_fh2")
 		return full_hessian_fh2_g<real>;
+	if (name == "extended_qp2")
+		return extended_qp2_g<real>;
+	if (name == "pp_quad")
+		return pp_quad_g<real>;
+	if (name == "explin1")
+		return explin1_g<real>;
 	throw "function not implemented";
 }
 
@@ -147,6 +279,12 @@ auto starting_point(std::string name, size_t n) {
 		return extended_psc1_x0<real>(n);
 	if (name == "full_hessian_fh2")
 		return full_hessian_fh2_x0<real>(n);
+	if (name == "extended_qp2")
+		return extended_qp2_x0<real>(n);
+	if (name == "pp_quad")
+		return pp_quad_x0<real>(n);
+	if (name == "explin1")
+		return explin1_x0<real>(n);
 	throw "function not implemented";
 }
 
