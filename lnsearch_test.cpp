@@ -2,6 +2,7 @@
 #include "la.h"
 #include "lnsearch.h"
 #include "lautils.h"
+#include "functions.h"
 
 using namespace std;
 using namespace la;
@@ -71,18 +72,13 @@ int main() {
 	cout.tie(nullptr);
 	cerr.tie(nullptr);
 
-	auto f = f2;
-	auto g = g2;
-	vecd x0 = {0.0, 0.0};
+	string fname = "pp_quad";
 
-	// simple_gradient_descent("armijo", x0, f, g);
-	// simple_gradient_descent("wolfe", x0, f, g);
-	// simple_gradient_descent("strong_wolfe", x0, f, g);
-	// simple_gradient_descent("goldstein", x0, f, g,
-	// 	{{"steepness", 0.1}});
-	// simple_gradient_descent("fixed_line_search", x0, f, g,
-	// 	{{"initial_step", 0.001}});
-	cerr.precision(20);
+	auto f = functions::function<double>(fname);
+	auto g = functions::gradient<double>(fname);
+	vecd x0 = functions::starting_point<double>(fname, 4);
+
+	cerr.precision(8);
 	cerr << fixed;
-	momentum("armijo", x0, f, g);	
+	momentum("goldstein", x0, f, g);
 }

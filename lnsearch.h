@@ -282,6 +282,42 @@ real fixed_line_search(real initial_step) {
 	return initial_step;
 }
 
+// Very bad. Only useful to demonstrate how easy it is
+// to make a terribly bad line search method.
+template<class real, class func_t>
+real binary(
+	la::vec<real> x0,
+	la::vec<real> d,
+	func_t f,
+	real initial_step)
+{
+	real a = initial_step;
+	// real fstart = f(x0);
+	real f0 = f(x0 + d * a);
+	real f1 = f(x0 + d * a * 2);
+
+	if (f1 < f0) {
+		a *= 2;
+		real curr = f1;
+		real t = f(x0 + d*a*2);
+		while (t < curr) {
+			curr = t;
+			a *= 2;
+			t = f(x0 + d*a*2);
+		}
+		return a;
+	} else {
+		real curr = f0;
+		real t = f(x0 + d*a/2);
+		while (t < curr) {
+			a /= 2;
+			curr = t;
+			t = f(x0 + d*a/2);
+		}
+		return a;
+	}
+}
+
 template<class real, class func_t, class grad_t>
 real line_search(
 	const std::string& method_name,
@@ -358,6 +394,12 @@ real line_search(
 		p["initial_step"] = 1;
 		rest();
 		return fixed_line_search(p["initial_step"]);
+	}
+
+	if (method_name == "binary") {
+		p["initial_step"] = 1;
+		rest();
+		return binary(x0, d, f, p["initial_step"]);
 	}
 
 	throw "unknown method name";
