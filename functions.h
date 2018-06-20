@@ -6,8 +6,9 @@
 #include <string>
 
 /*
-	Dostupne funkcije:
-	Ime, pozicija u pdf-u sa funkcijama (naziv u programu)
+	Available functions:
+	Name, position in the PDF file my lecturer gave me (the
+		function's ID in this library)
 
 	Extended PSC1, 6/3 (extended_psc1)
 	Full Hessian FH2, 6/6 (full_hessian_fh2)
@@ -57,6 +58,31 @@ la::vec<real> extended_psc1_g(const la::vec<real>& v) {
 		z[i+1] += 2*t*(2*v[i+1] + v[i]);
 		z[i+1] -= 2*cos(v[i+1])*sin(v[i+1]);
 	}
+	return z;
+}
+
+template<class real>
+la::mat<real> extended_psc1_h(const la::vec<real>& v) {
+	if (v.size() % 2 || v.size() == 0)
+		throw "extended_psc1: n must be even and positive";
+	la::mat<real> z(v.size(), v.size(), 0.0);
+	for (size_t i=0; i<v.size(); i+=2) {
+		// 0-0
+		real a = v[i];
+		real b = v[i+1];
+
+		z[i][i] = 2*(2*a+b)*(2*a+b) + 4*(a*a+a*b+b*b)
+			+ 2*cos(a)*cos(a) - 2*sin(a)*sin(a);
+
+		// 0-1
+		z[i+1][i] = 2*(2*a+b)*(a+2*b) + 2*(a*a+a*b+b*b);
+		z[i][i+1] = z[i+1][i];
+
+		// 1-1
+		z[i+1][i+1] = 2*(a+2*b)*(a+2*b) + 4*(a*a+a*b+b*b)
+			- 2*cos(b)*cos(b) + 2*sin(b)*sin(b);
+	}
+
 	return z;
 }
 
@@ -115,6 +141,17 @@ la::vec<real> full_hessian_fh2_g(const la::vec<real>& v) {
 }
 
 template<class real>
+la::mat<real> full_hessian_fh2_h(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "full_hessian_fh2: n must be positive";
+	la::mat<real> z(v.size(), v.size(), 0.0);
+	for (size_t i=0; i<v.size(); i++)
+		for (size_t j=0; j<v.size(); j++)
+			z[i][j] = 2*(v.size() - std::max(i, j));
+	return z;
+}
+
+template<class real>
 la::vec<real> full_hessian_fh2_x0(size_t n) {
 	if (n == 0)
 		throw "full_hessian_fh2: n must be positive";
@@ -151,6 +188,32 @@ la::vec<real> extended_qp2_g(const la::vec<real>& v) {
 		t += v[i]*v[i];
 	for (size_t i=0; i<v.size(); i++)
 		z[i] += 4*v[i]*t;
+	return z;
+}
+
+template<class real>
+la::mat<real> extended_qp2_h(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "extended_qp2: n must be positive";
+	la::mat<real> z(v.size(), v.size(), 0.0);
+
+	real sk = 0;
+	for (size_t i=0; i<v.size(); i++)
+		sk += v[i]*v[i];
+
+	for (size_t i=0; i<v.size(); i++)
+		for (size_t j=i+1; j<v.size(); j++)
+			z[i][j] = z[j][i] = v[i]*v[j]*8;
+
+	z[v.size()-1][v.size()-1] = 8*v[v.size()-1]*v[v.size()-1]
+		+ 4*(sk - 100);
+
+	for (size_t i=0; i<v.size()-1; i++) {
+		real a = v[i];
+		z[i][i] = 8*a*a + 4*(sk - 100) + 2*(2*a - cos(a))*(2*a - cos(a))
+			+ 2*(a*a-sin(a))*(2+sin(a));
+	}
+
 	return z;
 }
 
@@ -200,6 +263,25 @@ la::vec<real> pp_quad_g(const la::vec<real>& v) {
 }
 
 template<class real>
+la::mat<real> pp_quad_h(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "pp_quad: n must be positive";
+	la::mat<real> z(v.size(), v.size(), 0.0);
+	for (size_t i=0; i<v.size(); i++) {
+		for (size_t j=0; j<v.size(); j++) {
+			if (i == j) {
+				if (i == 0)
+					z[i][j] += 200;
+				z[i][j] += 200*(i+1);
+			}
+			z[i][j] += 2*(v.size() - std::max(i, j));
+		}
+	}
+
+	return z / (real)100;
+}
+
+template<class real>
 la::vec<real> pp_quad_x0(size_t n) {
 	if (n == 0)
 		throw "pp_quad: n must be positive";
@@ -235,13 +317,40 @@ la::vec<real> explin1_g(const la::vec<real>& v) {
 }
 
 template<class real>
+la::mat<real> explin1_h(const la::vec<real>& v) {
+	if (v.size() == 0)
+		throw "explin1: n must be positive";
+	la::mat<real> z(v.size(), v.size(), 0.0);
+	for (size_t i=0; i<v.size(); i++) {
+		real b = v[i];
+		if (i > 0) {
+			real a = v[i-1];
+			z[i][i] += a*a*exp(0.1*a*b);
+		}
+		if (i+1 < v.size()) {
+			real c = v[i+1];
+			z[i][i] += c*c*exp(0.1*b*c);
+		}
+	}
+
+	for (size_t i=0; i<v.size()-1; i++) {
+		real a = v[i];
+		real b = v[i+1];
+		z[i][i+1] = (10+a*b)*exp(0.1*a*b);
+		z[i+1][i] = z[i][i+1];
+	}
+
+	return z / (real)100;
+}
+
+template<class real>
 la::vec<real> explin1_x0(size_t n) {
 	if (n == 0)
 		throw "explin1: n must be positive";
 	return la::vec<real>(n, 0.0);
 }
 
-// Za izvoz!
+// You only need to call these:
 
 template<class real>
 auto function(std::string name) {
@@ -270,6 +379,21 @@ auto gradient(std::string name) {
 		return pp_quad_g<real>;
 	if (name == "explin1")
 		return explin1_g<real>;
+	throw "function not implemented";
+}
+
+template<class real>
+auto hessian(std::string name) {
+	if (name == "extended_psc1")
+		return extended_psc1_h<real>;
+	if (name == "full_hessian_fh2")
+		return full_hessian_fh2_h<real>;
+	if (name == "extended_qp2")
+		return extended_qp2_h<real>;
+	if (name == "pp_quad")
+		return pp_quad_h<real>;
+	if (name == "explin1")
+		return explin1_h<real>;
 	throw "function not implemented";
 }
 
