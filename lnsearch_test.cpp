@@ -63,7 +63,34 @@ void momentum(
 		x0 += p * line_search(ls_method, x0, p, f, g, params);
 	}
 	cerr << "steps = " << steps << '\n';
+}
 
+template<class real, class func_t, class grad_t>
+void fletcher_reeves(
+	string ls_method,
+	vec<real> x0,
+	func_t f,
+	grad_t g,
+	map<string, real> params = {})
+{
+	int steps = 0;
+	auto p0 = -g(x0);
+	real a0 = line_search(ls_method, x0, p0, f, g, params);
+	auto x1 = x0 + p0*a0;
+	auto s0 = p0;
+
+	while (norm(g(x1)) > 1e-7 && steps++ < 100000) {
+		cerr << x1 << "   gnorm = " << norm(g(x1)) << '\n';
+		auto p1 = -g(x1); // steepest direction at xn
+		auto beta1 = x1.dot(x1) / x0.dot(x0); // FR beta
+		auto s1 = p1 + s0*beta1; // update the conjugate direction
+		auto a1 = line_search(ls_method, x1, s1, f, g, params);
+
+		auto x2 = x1 + s1*a1;
+
+		x1 = x2;
+		s0 = s1;
+	}
 }
 
 int main() {
@@ -72,7 +99,7 @@ int main() {
 	cout.tie(nullptr);
 	cerr.tie(nullptr);
 
-	string fname = "pp_quad";
+	string fname = "extended_psc1";
 
 	auto f = functions::function<double>(fname);
 	auto g = functions::gradient<double>(fname);
@@ -80,5 +107,5 @@ int main() {
 
 	cerr.precision(8);
 	cerr << fixed;
-	momentum("goldstein", x0, f, g);
+	fletcher_reeves("strong_wolfe", x0, f, g);
 }
