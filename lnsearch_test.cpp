@@ -93,6 +93,24 @@ void fletcher_reeves(
 	}
 }
 
+template<class T>
+struct call_count_wrapper {
+	T f;
+	shared_ptr<int> cc;
+
+	call_count_wrapper(T f) : f(f), cc(make_shared<int>(0)) {}
+
+	template<class... U>
+	auto operator() (U... u) {
+		++*cc;
+		return f(u...);
+	}
+
+	int count() const {
+		return *cc;
+	}
+};
+
 int main() {
 	ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
@@ -105,7 +123,10 @@ int main() {
 	auto g = functions::gradient<double>(fname);
 	vecd x0 = functions::starting_point<double>(fname, 4);
 
+	auto f2 = call_count_wrapper(f);
+
 	cerr.precision(8);
 	cerr << fixed;
-	fletcher_reeves("strong_wolfe", x0, f, g);
+	fletcher_reeves("wolfe", x0, f2, g);
+	cerr << f2.count() << '\n';
 }
