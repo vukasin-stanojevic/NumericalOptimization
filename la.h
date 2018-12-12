@@ -478,7 +478,7 @@ public:
 		if (cols() != x.size())
 			throw "operand size mismatch";
 
-		vec<U> tmp(rows());
+		vec<U> tmp(rows(), (U)0);
 		for (size_t i=0; i<rows(); i++)
 			for (size_t j=0; j<cols(); j++)
 				tmp[i] += a[i][j] * x[j];
