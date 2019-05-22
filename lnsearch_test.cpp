@@ -111,6 +111,11 @@ struct call_count_wrapper {
 	}
 };
 
+template<class T>
+call_count_wrapper<T> make_call_count_wrapper(T f) {
+	return call_count_wrapper<T>(f);
+}
+
 int main() {
 	ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
@@ -123,7 +128,7 @@ int main() {
 	auto g = functions::gradient<double>(fname);
 	vecd x0 = functions::starting_point<double>(fname, 4);
 
-	auto f2 = call_count_wrapper(f);
+	auto f2 = make_call_count_wrapper(f);
 
 	cerr.precision(8);
 	cerr << fixed;
