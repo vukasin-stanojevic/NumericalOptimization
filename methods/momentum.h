@@ -16,7 +16,7 @@ namespace opt_methods {
             void operator()(function &func,
                             line_search &lin_sr, la::vec<real> &x0) {
                 auto p = -func.gradient(x0);
-                while (norm(func.gradient(x0)) > 1e-7 && this->steps++ < 1000) {
+                while (norm(func.gradient(x0)) > 1e-7 && this->steps++ < 100000) {
                     cerr << x0 << "   gnorm = " << norm(func.gradient(x0)) << '\n';
                     p = p * 0.9 - func.gradient(x0) * 0.1;
                     x0 += p * lin_sr(x0, p, func);

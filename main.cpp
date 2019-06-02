@@ -15,16 +15,16 @@ int main() {
     cerr.tie(nullptr);
 
 
-    auto function = functions::extended_psc1<double>::getFunction();
+    auto function = functions::ap_quad<double>::getFunction();
 
 
 
-    auto x0 = function.starting_point(4000);
+    auto x0 = function.starting_point(4);
     cerr.precision(8);
     cerr << fixed;
 
-    /*cout << function(x0) << endl;
-    cout << function.gradient(x0) << endl;*/
+    cout << x0 << endl;
+    cout << function.hessian(x0) << endl;
 
 
 

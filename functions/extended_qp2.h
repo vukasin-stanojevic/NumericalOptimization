@@ -15,16 +15,19 @@ public:
     static real func(const la::vec<real>& v){
         if (v.size() == 0)
             throw "extended_qp2: n must be positive";
-        real z = 0;
-        for (size_t i=0; i<v.size()-1; i++) {
+        auto n = v.size();
+        real s1 = 0;
+        real s2 = 0;
+        for (size_t i=0; i<n-1; i++) {
             real t = v[i]*v[i] - sin(v[i]);
-            z += t*t;
+            s1 += t*t;
+
+            t = v[i]*v[i];
+            s2+=t;
         }
-        real p = -100;
-        for (size_t i=0; i<v.size(); i++)
-            p += v[i]*v[i];
-        z += p*p;
-        return z;
+        s2 += v[n-1]*v[n-1] - 100;
+
+        return s1 + s2*s2;
     }
 
     static la::vec<real> gradient(const la::vec<real>& v){

@@ -15,12 +15,13 @@ namespace opt_methods {
             template<class line_search,class function>
             void operator()(function &func,
                             line_search &lin_sr, la::vec<real> &x0) {
-                while (norm(func.gradient(x0)) > 1e-8 && this->steps++ < 1000) {
+                while (norm(func.gradient(x0)) > 1e-8 && this->steps++ < 100000) {
                     cerr << x0 << "   grad: ";
                     cerr << func.gradient(x0) << '\n';
                     auto p = -func.gradient(x0);
                     x0 += p * lin_sr(x0, p, func);
                 }
+                cerr << func(x0) << " " << norm(func.gradient(x0)) << endl;
                 cerr << "steps = " << this->steps << '\n';
             }
         };
