@@ -1,17 +1,15 @@
-//
-// Created by lazar on 26.5.19..
-//
-
 #ifndef PROJEKATC___EXTENDED_PSC1_H
 #define PROJEKATC___EXTENDED_PSC1_H
 
 #include "function.h"
 
-namespace functions{
+namespace opt {
+namespace function {
+
 template<class real>
-class extended_psc1{
+class extended_psc1 {
 public:
-    static real func(const la::vec<real>& v){
+    static real func(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0)
             throw "extended_psc1: n must be even and positive";
         real z = 0;
@@ -26,7 +24,7 @@ public:
         return z;
     }
 
-    static la::vec<real> gradient(const la::vec<real>& v)  {
+    static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0)
             throw "extended_psc1: n must be even and positive";
         la::vec<real> z(v.size(), 0.0);
@@ -41,7 +39,7 @@ public:
         return z;
     }
 
-    static la::mat<real> hessian(const la::vec<real>& v)  {
+    static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0)
             throw "extended_psc1: n must be even and positive";
         la::mat<real> z(v.size(), v.size(), 0.0);
@@ -76,10 +74,12 @@ public:
         return z;
     }
 
-    static function<real> getFunction(){
-        return function<real>(func,gradient,hessian,starting_point);
+    static function<real> getFunction() {
+        return function<real>(func, gradient, hessian, starting_point);
     }
 };
+
+}
 }
 
 #endif //PROJEKATC___EXTENDED_PSC1_H

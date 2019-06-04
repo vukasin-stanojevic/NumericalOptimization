@@ -1,17 +1,15 @@
-//
-// Created by lazar on 26.5.19..
-//
-
 #ifndef PROJEKATC___FULL_HESSIAN_FH2_H
 #define PROJEKATC___FULL_HESSIAN_FH2_H
 
 #include "function.h"
 
-namespace functions{
+namespace opt {
+namespace function {
+
 template<class real>
-class full_hessian_fh2{
+class full_hessian_fh2 {
 public:
-    static real func(const la::vec<real>& v){
+    static real func(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "full_hessian_fh2: n must be positive";
         real z = 0, ps = 0;
@@ -22,20 +20,21 @@ public:
             ps += v[i];
             z += (ps - 1) * (ps - 1);
         }
+        return z;
     }
 
-    static la::vec<real> gradient(const la::vec<real>& v){
+    static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "full_hessian_fh2: n must be positive";
-        // krajnji rezultat
+        // return value
         la::vec<real> z(v.size(), 0.0);
-        // prefiksne sume
+        // prefix sums
         la::vec<real> ps(v.size(), 0.0);
         ps[0] = v[0];
         for (size_t i=1; i<v.size(); i++)
             ps[i] = ps[i-1] + v[i];
 
-        // pocetni rezultat
+        // starting result
         real t = -2*(real)v.size();
         for (size_t i=0; i<v.size(); i++)
             t += (v.size() - i) * v[i] * 2;
@@ -48,7 +47,7 @@ public:
         return z;
     }
 
-    static la::mat<real> hessian(const la::vec<real>& v){
+    static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "full_hessian_fh2: n must be positive";
         la::mat<real> z(v.size(), v.size(), 0.0);
@@ -58,15 +57,18 @@ public:
         return z;
     }
 
-    static la::vec<real> starting_point(const size_t n){
+    static la::vec<real> starting_point(const size_t n) {
         if (n == 0)
             throw "full_hessian_fh2: n must be positive";
         return la::vec<real>(n, 0.01);
     }
-    static function<real> getFunction(){
-        return function<real>(func,gradient,hessian,starting_point);
+
+    static function<real> getFunction() {
+        return function<real>(func, gradient, hessian, starting_point);
     }
 };
+
+}
 }
 
 #endif //PROJEKATC___FULL_HESSIAN_FH2_H

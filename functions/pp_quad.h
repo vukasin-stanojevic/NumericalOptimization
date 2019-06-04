@@ -1,17 +1,15 @@
-//
-// Created by lazar on 26.5.19..
-//
-
 #ifndef PROJEKATC___PP_QUAD_H
 #define PROJEKATC___PP_QUAD_H
 
 #include "function.h"
 
-namespace functions{
+namespace opt {
+namespace function {
+
 template<class real>
-class pp_quad{
+class pp_quad {
 public:
-    static real func(const la::vec<real>& v){
+    static real func(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "pp_quad: n must be positive";
         real z = 0;
@@ -25,7 +23,7 @@ public:
         return z;
     }
 
-    static la::vec<real> gradient(const la::vec<real>& v){
+    static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "pp_quad: n must be positive";
         la::vec<real> z(v.size(), 0.0);
@@ -45,7 +43,7 @@ public:
         return z;
     }
 
-    static la::mat<real> hessian(const la::vec<real>& v){
+    static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "pp_quad: n must be positive";
         la::mat<real> z(v.size(), v.size(), 0.0);
@@ -63,16 +61,18 @@ public:
         return z / (real)100;
     }
 
-    static la::vec<real> starting_point(const size_t n){
+    static la::vec<real> starting_point(const size_t n) {
         if (n == 0)
             throw "pp_quad: n must be positive";
         return la::vec<real>(n, 0.5);
     }
-    static function<real> getFunction(){
-        return function<real>(func,gradient,hessian,starting_point);
+
+    static function<real> getFunction() {
+        return function<real>(func, gradient, hessian, starting_point);
     }
 };
-}
 
+}
+}
 
 #endif //PROJEKATC___PP_QUAD_H

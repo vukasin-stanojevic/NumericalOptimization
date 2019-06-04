@@ -1,35 +1,28 @@
-//
-// Created by lazar on 26.5.19..
-//
-
 #ifndef PROJEKATC___BASE_METHOD_H
 #define PROJEKATC___BASE_METHOD_H
 
-#include<map>
-#include<string>
-
+#include "../functions/function.h"
+#include "../line_searches/base_line_search.h"
 #include "../linear_algebra.h"
-#include "../functions.h"
-#include "../line_searches.h"
 
-using namespace std;
-namespace opt_methods {
-    template<class method,class real>
-    class base_method {
-    protected:
-        size_t steps;
-    public:
-        base_method():steps(0){}
-        size_t get_number_steps(){
-            return steps;
-        }
+namespace opt {
+namespace method {
 
-        template<class line_search,class function>
-        void operator()(function &func, line_search &lin_sr, la::vec<real> &x0){
-            static_cast<method*>(this)->operator()(func,lin_sr,x0);
-        }
+template<class real>
+class base_method {
+public:
+    base_method() : iter_count(0) {}
 
-    };
+    size_t get_iter_count() const {
+        return iter_count;
+    }
+
+    virtual void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) = 0;
+protected:
+    size_t iter_count;
+};
+
+}
 }
 
 #endif //PROJEKATC___BASE_METHOD_H

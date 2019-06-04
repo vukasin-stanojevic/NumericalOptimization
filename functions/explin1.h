@@ -1,18 +1,15 @@
-//
-// Created by lazar on 26.5.19..
-//
-
 #ifndef PROJEKATC___EXPLIN1_H
 #define PROJEKATC___EXPLIN1_H
 
 #include "function.h"
 
+namespace opt {
+namespace function {
 
-namespace functions{
 template<class real>
-class explin1{
+class explin1 {
 public:
-    static real func(const la::vec<real>& v){
+    static real func(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "explin1: n must be positive";
         real z = 0;
@@ -23,7 +20,7 @@ public:
         return z;
     }
 
-    static la::vec<real> gradient(const la::vec<real>& v){
+    static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "explin1: n must be positive";
         la::vec<real> z(v.size(), 0.0);
@@ -36,7 +33,7 @@ public:
         return z;
     }
 
-    static la::mat<real> hessian(const la::vec<real>& v){
+    static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "explin1: n must be positive";
         la::mat<real> z(v.size(), v.size(), 0.0);
@@ -61,15 +58,19 @@ public:
 
         return z / (real)100;
     }
-    static la::vec<real> starting_point(const size_t n){
+
+    static la::vec<real> starting_point(const size_t n) {
         if (n == 0)
             throw "explin1: n must be positive";
         return la::vec<real>(n, 0.0);
     }
-    static function<real> getFunction(){
-        return function<real>(func,gradient,hessian,starting_point);
+
+    static function<real> getFunction() {
+        return function<real>(func, gradient, hessian, starting_point);
     }
 };
+
+}
 }
 
 #endif //PROJEKATC___EXPLIN1_H

@@ -1,16 +1,13 @@
-//
-// Created by lazar on 26.5.19..
-//
-
 #ifndef PROJEKATC___EXTENDED_QP2_H
 #define PROJEKATC___EXTENDED_QP2_H
 
-
 #include "function.h"
 
-namespace functions{
+namespace opt {
+namespace function {
+
 template<class real>
-class extended_qp2{
+class extended_qp2 {
 public:
     static real func(const la::vec<real>& v){
         if (v.size() == 0)
@@ -69,15 +66,18 @@ public:
         return z;
     }
 
-    static la::vec<real> starting_point(const size_t n){
+    static la::vec<real> starting_point(const size_t n) {
         if (n == 0)
             throw "extended_qp2: n must be positive";
         return la::vec<real>(n, 0.5);
     }
-    static function<real> getFunction(){
-        return function<real>(func,gradient,hessian,starting_point);
+
+    static function<real> getFunction() {
+        return function<real>(func, gradient, hessian, starting_point);
     }
 };
+
+}
 }
 
 #endif //PROJEKATC___EXTENDED_QP2_H
