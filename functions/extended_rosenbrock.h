@@ -16,9 +16,10 @@ public:
             throw "extended_rosenbrock: n must be even and positive";
         }
 
+        size_t n = v.size();
         real z = 0.0;
 
-        for (size_t i = 0; i < v.size(); i += 2) {
+        for (size_t i = 0; i < n; i += 2) {
             real t = v[i+1] - v[i]*v[i];
             z += c * t*t;
             t = 1 - v[i];

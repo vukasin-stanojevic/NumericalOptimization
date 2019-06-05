@@ -18,8 +18,9 @@ int main() {
 
 
 //    typedef function::ap_quad<double> func;
-    typedef function::pp_quad<double> func;
+//    typedef function::pp_quad<double> func;
 //    typedef function::extended_rosenbrock<double> func;
+    typedef function::cube<double> func;
 
 
     map<string, double> params;
@@ -27,13 +28,13 @@ int main() {
 //    line_search::fixed_line_search<double> ls(params);
 //    line_search::armijo<double> ls(params);
 //    line_search::goldstein<double> ls(params);
-//    line_search::wolfe<double> ls(params);
-    line_search::strong_wolfe<double> ls(params);
+    line_search::wolfe<double> ls(params);
+//    line_search::strong_wolfe<double> ls(params);
 
 
-//    method::gradient::gradient_descent<double> opt;
+    method::gradient::gradient_descent<double> opt;
 //    method::gradient::momentum<double> opt;
-    method::conjugate_gradient::fletcher_reeves<double> opt;
+//    method::conjugate_gradient::fletcher_reeves<double> opt;
 
 
     auto f = func::getFunction();
