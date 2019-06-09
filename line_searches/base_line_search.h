@@ -21,7 +21,8 @@ protected:
         }
     }
 
-    real interp(real t1, real t2, real val1, real val2, real der1, real der2) {
+    // Computes point t between points t1 and t2 by cubic interpolation
+    real cubic_interpolation(real t1, real t2, real val1, real val2, real der1, real der2) {
         real d1 = der1+der2-3*(val1-val2)/(t1-t2);
         real d2 = sqrt(d1*d1-der1*der2);
         real tmp = t2 - (t2 - t1)*(der2 + d2 - d1)/(der2 - der1 + 2*d2);
@@ -34,6 +35,7 @@ protected:
             t = t1 - 1;
         }
 
+        // if minimum is is not in the interval (t1, t2) then minimum is in t1
         if (t < t1 || t > t2) {
             t = t1;
         }

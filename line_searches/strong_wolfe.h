@@ -1,6 +1,7 @@
 #ifndef PROJEKATC___STRONG_WOLFE_H
 #define PROJEKATC___STRONG_WOLFE_H
 
+#include <cmath>
 #include "base_line_search.h"
 
 namespace opt {
@@ -9,7 +10,7 @@ namespace line_search {
 template<class real>
 class strong_wolfe : public base_line_search<real> {
 private:
-    real steepness;
+    real steepness; // rho
     real initial_step;
     real sigma;
     real xi;
@@ -43,33 +44,37 @@ public:
         real pad1 = pad0;
         real pad2 = func.gradient(x + d*a2).dot(d);
 
-        size_t steps = 1;
+        size_t iter_num = 1;
 
         auto noc_zoom = [&]() {
-            double a = 0.0;
+            real a;
             while (1) {
                 if (a1 < a2) {
-                    a = this->interp(a1, a2, f1, f2, pad1, pad2);
+                    a = this->cubic_interpolation(a1, a2, f1, f2, pad1, pad2);
                 } else {
-                    a = this->interp(a2, a1, f2, f1, pad2, pad1);
+                    a = this->cubic_interpolation(a2, a1, f2, f1, pad2, pad1);
                 }
+
                 real ff = func(x + d*a);
                 real pad = func.gradient(x + d*a).dot(d);
 
-                if ((abs(ff - f1) / (1 + abs(ff)) < xi) ||
-                    (abs(ff - f2) / (1 + abs(ff)) < xi)) {
+                if ((fabs(ff - f1) / (1 + fabs(ff)) < xi) ||
+                    (fabs(ff - f2) / (1 + fabs(ff)) < xi)) {
                     return a;
                 }
 
                 if ((ff > f0 + steepness*a*pad0) || (ff >= f1)) {
+                    // if we do not observe sufficient decrease in point a,
+                    // we set the maximum of the feasible interval to a
                     a2 = a;
                     f2 = ff;
                     pad2 = pad;
                 } else {
-                    if (abs(pad1) <= -sigma*pad0) {
+                    if (fabs(pad) <= -sigma*pad0) {
+                        // strong wolfe fullfilled
                         return a;
                     }
-                    if (pad1*(a2-a1) >= 0) {
+                    if (pad*(a2-a1) >= 0) { // if slope positive and a2 > a1
                         a2 = a1;
                         f2 = f1;
                         pad2 = pad1;
@@ -79,22 +84,24 @@ public:
                     pad1 = pad;
                 }
             }
-            return a;
         };
 
         while (1) {
-            // <----- armijo condition ----->
-            if (f2 > f0 + pad0*steepness*a2 || (f1 <= f2 && steps > 1)) {
+            // armijo condition: check if current iteration violates sufficient decrease
+            if (f2 > f0 + pad0*steepness*a2 || (f2 >= f1 && iter_num > 1)) {
+                // there has to be an acceptable point between t0 and t1 because rho (steepness) > sigma
                 return noc_zoom();
             }
 
-            // strong!!!
-            if (abs(pad2) <= -sigma*pad1) {
+            // current iteration has sufficient decrease, but are we too close?
+            if (fabs(pad2) <= -sigma*pad0) {
+                // strong wolfe fullfilled, quit
                 return a2;
             }
 
-            // strong!
+            // are we behind the minimum?
             if (pad2 >= 0) {
+                // there has to be an acceptable point between a1 and a2
                 return noc_zoom();
             }
 
@@ -102,10 +109,10 @@ public:
             f1 = f2;
             pad1 = pad2;
 
-            a2 = a2*step_factor > max_step ? max_step : a2*step_factor;
+            a2 = fmin(a2*step_factor, max_step);
             f2 = func(x + d*a2);
             pad2 = func.gradient(x + d*a2).dot(d);
-            ++steps;
+            ++iter_num;
         }
     }
 };

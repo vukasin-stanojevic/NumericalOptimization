@@ -19,8 +19,8 @@ int main() {
 
 //    typedef function::ap_quad<double> func;
 //    typedef function::pp_quad<double> func;
-//    typedef function::extended_rosenbrock<double> func;
-    typedef function::cube<double> func;
+    typedef function::extended_rosenbrock<double> func;
+//    typedef function::cube<double> func;
 
 
     map<string, double> params;
@@ -39,10 +39,13 @@ int main() {
 
     auto f = func::getFunction();
     auto x = f.starting_point(4);
+//    auto x = la::vec<double>({1,2,3,4,5,6});
+
     cerr << "x:" << endl << x << endl;
-    cerr << "func(x):" << endl << func::func(x) << endl;
-    cerr << "grad(x):" << endl << func::gradient(x) << endl;
-    cerr << "hess(x):" << endl << func::hessian(x) << endl;
+//    cerr << "func(x):" << endl << func::func(x) << endl;
+//    cerr << "grad(x):" << endl << func::gradient(x) << endl;
+//    cerr << "hess(x):" << endl << func::hessian(x) << endl;
+
     cerr << "Line search params:" << endl;
     for (auto e : params) {
         cerr << e.first << " " << e.second << endl;

@@ -9,7 +9,7 @@ namespace line_search {
 template<class real>
 class goldstein : public base_line_search<real> {
 private:
-    real steepness;
+    real steepness; // rho
     real initial_step;
     real gamma;
 public:
@@ -33,9 +33,9 @@ public:
         bool a2inf = true;
         real f0 = func(x);
         real ff = func(x + d*a);
-        size_t steps = 1;
+        size_t iter_num = 1;
 
-        while (steps < 52) {
+        while (iter_num < 52) {
             if (ff > f0 + steepness*a*pad) {
                 a2 = a;
                 a2inf = false;
@@ -51,7 +51,7 @@ public:
                 break;
             }
 
-            ++steps;
+            ++iter_num;
             ff = func(x + d*a);
         }
 

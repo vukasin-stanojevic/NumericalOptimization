@@ -9,7 +9,7 @@ namespace line_search {
 template<class real>
 class armijo : public base_line_search<real> {
 private:
-    real steepness;
+    real steepness; // rho
     real initial_step;
 public:
     armijo(std::map<std::string, real>& params) {
@@ -33,11 +33,11 @@ public:
         real f_curr, f_prev, a_prev;
         f_curr = func(x + d * a_curr);
 
-        size_t steps = 1;
+        size_t iter_num = 1;
 
         while (f_curr > f0 - steepness * a_curr * pad) {
             real a_new;
-            if (steps == 1) {
+            if (iter_num == 1) {
                 // find next point using quadratic interpolation
                 a_new = pad * a_curr * a_curr / 2 / (f0 - f_curr + pad * a_curr);
             } else {
@@ -59,7 +59,7 @@ public:
             f_prev = f_curr;
             f_curr = func(x + d * a_curr);
 
-            ++steps;
+            ++iter_num;
         }
 
         return a_curr;
