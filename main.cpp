@@ -17,9 +17,9 @@ int main() {
     cerr << fixed;
 
 
-//    typedef function::ap_quad<double> func;
-//    typedef function::pp_quad<double> func;
     typedef function::extended_rosenbrock<double> func;
+//    typedef function::pp_quad<double> func;
+//    typedef function::extended_psc1<double> func;
 //    typedef function::cube<double> func;
 
 
@@ -28,13 +28,13 @@ int main() {
 //    line_search::fixed_line_search<double> ls(params);
 //    line_search::armijo<double> ls(params);
 //    line_search::goldstein<double> ls(params);
-    line_search::wolfe<double> ls(params);
-//    line_search::strong_wolfe<double> ls(params);
+//    line_search::wolfe<double> ls(params);
+    line_search::strong_wolfe<double> ls(params);
 
 
-    method::gradient::gradient_descent<double> opt;
+//    method::gradient::gradient_descent<double> opt;
 //    method::gradient::momentum<double> opt;
-//    method::conjugate_gradient::fletcher_reeves<double> opt;
+    method::conjugate_gradient::fletcher_reeves<double> opt;
 
 
     auto f = func::getFunction();
@@ -44,7 +44,7 @@ int main() {
     cerr << "x:" << endl << x << endl;
 //    cerr << "func(x):" << endl << func::func(x) << endl;
 //    cerr << "grad(x):" << endl << func::gradient(x) << endl;
-//    cerr << "hess(x):" << endl << func::hessian(x) << endl;
+//    cerr << "hess(x):" << endl << func::hessian(x) << endl; return 0;
 
     cerr << "Line search params:" << endl;
     for (auto e : params) {
