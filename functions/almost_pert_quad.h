@@ -7,11 +7,11 @@ namespace opt {
 namespace function {
 
 template<class real>
-class ap_quad {
+class almost_pert_quad {
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() == 0)
-            throw "ap_quad: n must be positive";
+            throw "almost_pert_quad: n must be positive";
         real z = 0;
         size_t n = v.size();
         for (size_t i=0; i<n; ++i) {
@@ -24,7 +24,7 @@ public:
 
     static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() == 0)
-            throw "ap_quad: n must be positive";
+            throw "almost_pert_quad: n must be positive";
         size_t n = v.size();
         la::vec<real> z(n, 0.0);
         for (size_t i=0; i<n; ++i) {
@@ -37,7 +37,7 @@ public:
 
     static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() == 0)
-            throw "ap_quad: n must be positive";
+            throw "almost_pert_quad: n must be positive";
         la::mat<real> z(v.size(), v.size(), 0.0);
         size_t n = v.size();
         for (size_t i=0; i<n; ++i) {
@@ -53,7 +53,7 @@ public:
 
     static la::vec<real> starting_point(const size_t n) {
         if (n == 0)
-            throw "ap_quad: n must be positive";
+            throw "almost_pert_quad: n must be positive";
         return la::vec<real>(n,0.5);
     }
 

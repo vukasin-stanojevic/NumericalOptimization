@@ -7,13 +7,13 @@ namespace opt {
 namespace function {
 
 template<class real>
-class extended_rosenbrock {
+class ext_rosenbrock {
 public:
     static const int c = 100;
 
     static real func(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0) {
-            throw "extended_rosenbrock: n must be even and positive";
+            throw "ext_rosenbrock: n must be even and positive";
         }
 
         size_t n = v.size();
@@ -31,7 +31,7 @@ public:
 
     static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0) {
-            throw "extended_rosenbrock: n must be even and positive";
+            throw "ext_rosenbrock: n must be even and positive";
         }
 
         size_t n = v.size();
@@ -48,7 +48,7 @@ public:
 
     static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0) {
-            throw "extended_rosenbrock: n must be even and positive";
+            throw "ext_rosenbrock: n must be even and positive";
         }
 
         size_t n = v.size();
@@ -70,7 +70,7 @@ public:
 
     static la::vec<real> starting_point(const size_t n) {
         if (n % 2 || n == 0) {
-            throw "extended_rosenbrock: n must be even and positive";
+            throw "ext_rosenbrock: n must be even and positive";
         }
 
         la::vec<real> z(n, 0.0);
@@ -89,7 +89,7 @@ public:
 };
 
 template<class real>
-const int extended_rosenbrock<real>::c;
+const int ext_rosenbrock<real>::c;
 
 }
 }

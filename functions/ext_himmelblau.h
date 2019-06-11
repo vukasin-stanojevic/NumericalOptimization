@@ -7,11 +7,11 @@ namespace opt {
 namespace function {
 
 template<class real>
-class extended_himmelblau {
+class ext_himmelblau {
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() == 0) {
-            throw "extended_himmelblau: n must be even and positive";
+            throw "ext_himmelblau: n must be even and positive";
         }
 
         size_t n = v.size();
@@ -29,7 +29,7 @@ public:
 
     static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() == 0) {
-            throw "extended_himmelblau: n must be even and positive";
+            throw "ext_himmelblau: n must be even and positive";
         }
 
         size_t n = v.size();
@@ -45,7 +45,7 @@ public:
 
     static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() == 0) {
-            throw "extended_himmelblau: n must be even and positive";
+            throw "ext_himmelblau: n must be even and positive";
         }
 
         size_t n = v.size();
@@ -62,7 +62,7 @@ public:
 
     static la::vec<real> starting_point(const size_t n) {
         if (n == 0) {
-            throw "extended_himmelblau: n must be even and positive";
+            throw "ext_himmelblau: n must be even and positive";
         }
 
         return la::vec<real>(n, 1.0);

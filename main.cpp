@@ -17,10 +17,19 @@ int main() {
     cerr << fixed;
 
 
-    typedef function::extended_rosenbrock<double> func;
-//    typedef function::pp_quad<double> func;
-//    typedef function::extended_psc1<double> func;
+//    typedef function::ext_rosenbrock<double> func;
+    typedef function::ext_himmelblau<double> func;
+//    typedef function::gen_rosenbrock<double> func;
+//    typedef function::raydan1<double> func;
 //    typedef function::cube<double> func;
+//    typedef function::full_hessian2<double> func;
+//    typedef function::part_pert_quad<double> func;
+//    typedef function::ext_psc1<double> func;
+//    typedef function::ext_quad_pen_qp1<double> func;
+//    typedef function::almost_pert_quad<double> func;
+//    typedef function::diagonal1<double> func;
+//    typedef function::gen_psc1<double> func;
+//    typedef function::fletchcr<double> func;
 
 
     map<string, double> params;

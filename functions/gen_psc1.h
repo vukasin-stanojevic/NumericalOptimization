@@ -7,11 +7,11 @@ namespace opt {
 namespace function {
 
 template<class real>
-class generalized_psc1 {
+class gen_psc1 {
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() < 2)
-            throw "generalized_psc1: n must be greater than 1";
+            throw "gen_psc1: n must be greater than 1";
         real z = 0;
         for (size_t i=0; i<v.size()-1; ++i) {
             real t = v[i]*v[i] + v[i+1]*v[i+1] + v[i]*v[i+1];
@@ -26,7 +26,7 @@ public:
 
     static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() < 2)
-            throw "generalized_psc1: n must be greater than 1";
+            throw "gen_psc1: n must be greater than 1";
         la::vec<real> z(v.size(), 0.0);
         auto n = v.size();
         real prev = 0;
@@ -42,7 +42,7 @@ public:
 
     static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() < 2)
-            throw "generalized_psc1: n must be greater than 1";
+            throw "gen_psc1: n must be greater than 1";
         la::mat<real> z(v.size(), v.size(), 0.0);
 
         for (size_t i=0; i<v.size(); ++i) {
@@ -63,7 +63,7 @@ public:
 
     static la::vec<real> starting_point(const size_t n) {
         if (n < 2)
-            throw "generalized_psc1: n must be greater than 1";
+            throw "gen_psc1: n must be greater than 1";
         la::vec<real> z(n, 0);
         for (size_t i=0; i<n; ++i) {
             if (i % 2) {

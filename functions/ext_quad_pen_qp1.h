@@ -7,11 +7,11 @@ namespace opt {
 namespace function {
 
 template<class real>
-class extended_qp1 {
+class ext_quad_pen_qp1 {
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() == 0)
-            throw "extended_qp1: n must be positive";
+            throw "ext_quad_pen_qp1: n must be positive";
         auto n = v.size();
         real s1 = 0;
         real s2 = 0;
@@ -29,7 +29,7 @@ public:
 
     static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() == 0)
-            throw "extended_qp1: n must be positive";
+            throw "ext_quad_pen_qp1: n must be positive";
 
         la::vec<real> z(v.size(), 0.0);
 
@@ -48,7 +48,7 @@ public:
 
     static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() == 0)
-            throw "extended_qp1: n must be positive";
+            throw "ext_quad_pen_qp1: n must be positive";
 
 
         la::mat<real> z(v.size(), v.size(), 0.0);
@@ -73,7 +73,7 @@ public:
 
     static la::vec<real> starting_point(const size_t n) {
         if (n == 0)
-            throw "extended_qp1: n must be positive";
+            throw "ext_quad_pen_qp1: n must be positive";
         return la::vec<real>(n, 0.5);
     }
 

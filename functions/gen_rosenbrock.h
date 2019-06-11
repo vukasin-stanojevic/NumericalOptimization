@@ -7,13 +7,13 @@ namespace opt {
 namespace function {
 
 template<class real>
-class generalized_rosenbrock {
+class gen_rosenbrock {
 public:
     static const int c = 100;
 
     static real func(const la::vec<real>& v) {
         if (v.size() == 0) {
-            throw "generalized_rosenbrock: n must be positive";
+            throw "gen_rosenbrock: n must be positive";
         }
 
         size_t m = v.size() - 1;
@@ -31,7 +31,7 @@ public:
 
     static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() == 0) {
-            throw "generalized_rosenbrock: n must be positive";
+            throw "gen_rosenbrock: n must be positive";
         }
 
         size_t n = v.size();
@@ -49,7 +49,7 @@ public:
 
     static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() == 0) {
-            throw "generalized_rosenbrock: n must be positive";
+            throw "gen_rosenbrock: n must be positive";
         }
 
         size_t n = v.size();
@@ -61,7 +61,7 @@ public:
         z[0][1] = -4*c*v[0];
 
         // computes all rows except for first and last
-        for (size_t i = 0; i < n; i++) {
+        for (size_t i = 1; i < m; i++) {
             z[i][i-1] = -4*c*v[i-1];
             z[i][i] = 2 + 2*c + 8*c*v[i]*v[i] - 4*c*(-v[i]*v[i] + v[i+1]);
             z[i][i+1] = -4*c*v[i];
@@ -76,7 +76,7 @@ public:
 
     static la::vec<real> starting_point(const size_t n) {
         if (n == 0) {
-            throw "generalized_rosenbrock: n must be positive";
+            throw "gen_rosenbrock: n must be positive";
         }
 
         la::vec<real> z(n, 0.0);
@@ -94,7 +94,7 @@ public:
 };
 
 template<class real>
-const int generalized_rosenbrock<real>::c;
+const int gen_rosenbrock<real>::c;
 
 }
 }

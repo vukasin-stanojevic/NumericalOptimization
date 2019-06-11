@@ -7,11 +7,11 @@ namespace opt {
 namespace function {
 
 template<class real>
-class extended_psc1 {
+class ext_psc1 {
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0)
-            throw "extended_psc1: n must be even and positive";
+            throw "ext_psc1: n must be even and positive";
         real z = 0;
         for (size_t i=0; i<v.size(); i+=2) {
             real t = v[i]*v[i] + v[i+1]*v[i+1] + v[i]*v[i+1];
@@ -26,7 +26,7 @@ public:
 
     static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0)
-            throw "extended_psc1: n must be even and positive";
+            throw "ext_psc1: n must be even and positive";
         la::vec<real> z(v.size(), 0.0);
         for (size_t i=0; i<v.size(); i+=2) {
             real t = v[i]*v[i] + v[i+1]*v[i+1] + v[i]*v[i+1];
@@ -41,7 +41,7 @@ public:
 
     static la::mat<real> hessian(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0)
-            throw "extended_psc1: n must be even and positive";
+            throw "ext_psc1: n must be even and positive";
         la::mat<real> z(v.size(), v.size(), 0.0);
         for (size_t i=0; i<v.size(); i+=2) {
             // 0-0
@@ -65,7 +65,7 @@ public:
 
     static la::vec<real> starting_point(const size_t n) {
         if (n % 2 || n == 0)
-            throw "extended_psc1: n must be even and positive";
+            throw "ext_psc1: n must be even and positive";
         la::vec<real> z(n, 0);
         for (size_t i=0; i<n; i+=2) {
             z[i] = 3;

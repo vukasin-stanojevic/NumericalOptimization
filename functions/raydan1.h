@@ -19,7 +19,7 @@ public:
         real z = 0.0;
 
         for (size_t i = 0; i < n; ++i) {
-            z += (i / 10.0) * exp(v[i] - v[i]);
+            z += ((i+1) / 10.0) * (exp(v[i]) - v[i]);
         }
 
         return z;
@@ -34,7 +34,7 @@ public:
         la::vec<real> z(n, 0.0);
 
         for (size_t i = 0; i < n; ++i) {
-            z[i] = (i / 10.0) * (exp(v[i]) - 1);
+            z[i] = ((i+1) / 10.0) * (exp(v[i]) - 1);
         }
 
         return z;
@@ -49,7 +49,7 @@ public:
         la::mat<real> z(n, n, 0.0);
 
         for (size_t i = 0; i < n; ++i) {
-            z[i][i] = (i / 10.0) * exp(v[i]);
+            z[i][i] = ((i+1) / 10.0) * exp(v[i]);
         }
 
         return z;
