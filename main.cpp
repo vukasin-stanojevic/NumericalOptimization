@@ -17,8 +17,8 @@ int main() {
     cerr << fixed;
 
 
-//    typedef function::ext_rosenbrock<double> func;
-    typedef function::ext_himmelblau<double> func;
+    typedef function::ext_rosenbrock<double> func;
+//    typedef function::ext_himmelblau<double> func;
 //    typedef function::gen_rosenbrock<double> func;
 //    typedef function::raydan1<double> func;
 //    typedef function::cube<double> func;
@@ -31,31 +31,32 @@ int main() {
 //    typedef function::gen_psc1<double> func;
 //    typedef function::fletchcr<double> func;
 
+    const int n = 1000;
 
     map<string, double> params;
 //    line_search::binary<double> ls(params);
 //    line_search::fixed_line_search<double> ls(params);
 //    line_search::armijo<double> ls(params);
 //    line_search::goldstein<double> ls(params);
-//    line_search::wolfe<double> ls(params);
-    line_search::strong_wolfe<double> ls(params);
+    line_search::wolfe<double> ls(params);
+//    line_search::strong_wolfe<double> ls(params);
 
 
 //    method::gradient::gradient_descent<double> opt;
-//    method::gradient::momentum<double> opt;
-    method::conjugate_gradient::fletcher_reeves<double> opt;
+    method::gradient::momentum<double> opt;
+//    method::conjugate_gradient::fletcher_reeves<double> opt;
 
 
     auto f = func::getFunction();
-    auto x = f.starting_point(4);
+    auto x = f.starting_point(n);
 //    auto x = la::vec<double>({1,2,3,4,5,6});
 
-    cerr << "x:" << endl << x << endl;
+//    cerr << "x:" << endl << x << endl;
 //    cerr << "func(x):" << endl << func::func(x) << endl;
 //    cerr << "grad(x):" << endl << func::gradient(x) << endl;
 //    cerr << "hess(x):" << endl << func::hessian(x) << endl; return 0;
 
-    cerr << "Line search params:" << endl;
+    cerr << "Line search parameters:" << endl;
     for (auto e : params) {
         cerr << e.first << " " << e.second << endl;
     }
@@ -63,12 +64,14 @@ int main() {
 
     opt(f, ls, x);
 
-    cerr << "Xmin: " << x << endl;
-    cerr << "Fmin: " << func::func(x) << endl;
-    cerr << "grNorm: " << la::norm(func::gradient(x)) << endl;
+//    cerr << "xMin: " << x << endl;
+    cerr << "fMin: " << opt.get_f_min() << endl;
+    cerr << "grNorm: " << opt.get_gr_norm() << endl;
     cerr << "iterNum: " << opt.get_iter_count() << endl;
-    cerr << "funcEval: " << f.get_call_count() << endl;
-    cerr << "gradEval: " << f.get_grad_count() << endl;
+    cerr << "cpuTime (s): " << opt.get_cpu_time() << endl;
+    cerr << "funcEval: " << opt.get_f_call_count() << endl;
+    cerr << "gradEval: " << opt.get_g_call_count() << endl;
+    cerr << "hessEval: " << opt.get_h_call_count() << endl;
 
     return 0;
 }

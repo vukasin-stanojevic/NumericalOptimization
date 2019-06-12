@@ -13,6 +13,9 @@ class fletcher_reeves : public base_method<real> {
 public:
     fletcher_reeves() : base_method<real>() {}
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
+        this->iter_count = 0;
+        this->tic();
+
         real f_prev = f(x);
         la::vec<real> gr_old = f.gradient(x);
 
@@ -24,7 +27,8 @@ public:
         la::vec<real> gr = f.gradient(x);
 
         while (la::norm(gr) > 1e-7 && this->iter_count < 10000 && fabs(f_prev - f_curr)/(1 + fabs(f_curr)) > 1e-16) {
-            std::cerr << this->iter_count << ": " << x << " grnorm = " << la::norm(gr) << '\n';
+            ++this->iter_count;
+            //std::cerr << this->iter_count << ": " << x << " grnorm = " << la::norm(gr) << '\n';
 
             real beta_fr = gr.dot(gr) / gr_old.dot(gr_old);
 
@@ -42,8 +46,14 @@ public:
             f_curr = f(x);
             gr_old = gr;
             gr = f.gradient(x);
-            ++this->iter_count;
         }
+
+        this->toc();
+        this->f_min = f_curr;
+        this->gr_norm = la::norm(gr);
+        this->f_call_count = f.get_call_count();
+        this->g_call_count = f.get_grad_count();
+        this->h_call_count = f.get_hess_count();
     }
 };
 
