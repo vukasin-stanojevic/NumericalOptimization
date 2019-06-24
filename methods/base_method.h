@@ -8,14 +8,25 @@
 
 namespace opt {
 namespace method {
-
+template<class real>
+struct method_params{
+    la::vec<real> stariting_point;
+    real step_size;
+    size_t dimensionality;
+    size_t max_iterations;
+    real epsilon;
+    real working_precision;
+    real min_step_size;
+    real StartingPoint;
+    real nu = 0.1; // threshold for restarting beta in CG methods
+};
 template<class real>
 class base_method {
 public:
     base_method() : iter_count(0), f_call_count(0), g_call_count(0),
                     h_call_count(0), gr_norm(-1), f_min(0), cpu_time(0) {}
 
-    virtual void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) = 0;
+    virtual void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, method_params<real>& params) = 0;
 
     real get_f_min() const {
         return f_min;
@@ -65,6 +76,7 @@ protected:
 private:
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
 };
+
 
 }
 }

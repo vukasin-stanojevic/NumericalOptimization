@@ -18,7 +18,7 @@ public:
             z += t*t;
             t = sin(v[i]);
             z += t*t;
-            t = cos(v[i]);
+            t = cos(v[i+1]);
             z += t*t;
         }
         return z;
@@ -30,8 +30,8 @@ public:
         la::vec<real> z(v.size(), 0.0);
         auto n = v.size();
         real prev = 0;
-        z[0] = 2*(v[0]*v[0] + v[1]*v[1] + v[0]*v[1])*(2*v[0] + v[1]);
-        z[n-1] = 2*(v[n-2]*v[n-2] + v[n-1]*v[n-1] + v[n-2]*v[n-1])*(2*v[n-2] + v[n-1]);
+        z[0]= 2* (2*v[0]+v[1]) * (v[0]*v[0] +v[0]*v[1]+v[1]*v[1]) + 2*cos(v[0])*sin(v[0]);
+        z[n-1] = 2*(v[n-2]+2*v[n-1])*(v[n-2]*v[n-2]+v[n-2]*v[n-1]+v[n-1]*v[n-1])-2*cos(v[n-1])*sin(v[n-1]);;
         for (size_t i=1; i<n-1; ++i) {
             real t1 = v[i]*v[i] + v[i+1]*v[i+1] + v[i]*v[i+1];
             real t2 = v[i-1]*v[i-1] + v[i]*v[i] + v[i-1]*v[i];
@@ -44,11 +44,17 @@ public:
         if (v.size() < 2)
             throw "gen_psc1: n must be greater than 1";
         la::mat<real> z(v.size(), v.size(), 0.0);
-
-        for (size_t i=0; i<v.size(); ++i) {
+        size_t n = v.size();
+        for (size_t i=0; i<v.size()-1; ++i) {
             // d^2 vi
 
-            z[i][i] = 2*( (2*v[i] + v[i+1])*(2*v[i] + v[i+1]) + 2*(v[i]*v[i] + v[i+1]*v[i+1] + v[i]*v[i+1]) );
+            if (i == 0){
+                z[i][i] = 2*(2*v[0]+v[1])*(2*v[0]+v[1]) + 4*(v[0]*v[0]+v[0]*v[1]+v[1]*v[1]) + 2*cos(v[0])*cos(v[0]) - 2*sin(v[0])*sin(v[0]);
+            }else{
+                z[i][i] = 2*(v[i-1]+2*v[i])*(v[i-1]+2*v[i]) + 4*(v[i-1]*v[i-1]+v[i-1]*v[i]+v[i]*v[i]) + 2*(2*v[i]+v[i+1])*(2*v[i]+v[i+1]) + 4*(v[i]*v[i]+v[i]*v[i+1]+v[i+1]*v[i+1]);
+            }
+
+
 
             if(i+1<v.size()){
                 // d vivi+1
@@ -58,6 +64,7 @@ public:
             }
         }
 
+        z[n-1][n-1] = 2*(v[n-2]+2*v[n-1])*(v[n-2]+2*v[n-1]) + 4*(v[n-2]*v[n-2]+v[n-2]*v[n-1]+v[n-1]*v[n-1]) - 2*cos(v[n-1])*cos(v[n-1]) + 2*sin(v[n-1])*sin(v[n-1]);
         return z;
     }
 

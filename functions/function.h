@@ -2,6 +2,7 @@
 #define PROJEKATC___FUNCTION_H
 
 #include "../linear_algebra.h"
+#include<algorithm>
 
 namespace opt {
 namespace function {

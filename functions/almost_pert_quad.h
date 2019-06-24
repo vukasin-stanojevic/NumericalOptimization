@@ -9,6 +9,8 @@ namespace function {
 template<class real>
 class almost_pert_quad {
 public:
+    static const int c = 100;
+
     static real func(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "almost_pert_quad: n must be positive";
@@ -18,7 +20,7 @@ public:
             real t = (i+1)*v[i]*v[i];
             z += t;
         }
-        z+=(v[0]+v[n-1])*(v[0]+v[n-1])/100;
+        z+=n*(v[0]+v[n-1])*(v[0]+v[n-1])/c;
         return z;
     }
 
@@ -27,11 +29,14 @@ public:
             throw "almost_pert_quad: n must be positive";
         size_t n = v.size();
         la::vec<real> z(n, 0.0);
+
+        real t = (2.0/c)*(v[0]+v[n-1]);
+
         for (size_t i=0; i<n; ++i) {
             z[i] = 2*(i+1)*v[i];
         }
-        z[0]+= (v[0]+v[n-1])/50.0;
-        z[n-1]+= (v[0]+v[n-1])/50.0;
+        z[0]+= n*t;
+        z[n-1]+= n*t;
         return z;
     }
 
@@ -43,10 +48,10 @@ public:
         for (size_t i=0; i<n; ++i) {
             z[i][i] = 2*(i+1);
         }
-        z[n-1][n-1] += 1/50.0;
-        z[0][0] += 1/50.0;
-        z[n-1][0] += 1/50.0;
-        z[0][n-1] += 1/50.0;
+        z[n-1][n-1] += (2.0*n)/c;
+        z[0][0] += (2.0*n)/c;
+        z[n-1][0] += (2.0*n)/c;
+        z[0][n-1] += (2.0*n)/c;
 
         return z;
     }
@@ -61,7 +66,8 @@ public:
         return function<real>(func, gradient, hessian, starting_point);
     }
 };
-
+template<class real>
+const int almost_pert_quad<real>::c;
 }
 }
 

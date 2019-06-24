@@ -8,6 +8,7 @@ namespace function {
 
 template<class real>
 class fletchcr {
+    static const int c = 100;
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() == 0)
@@ -26,7 +27,6 @@ public:
         if (v.size() == 0)
             throw "fletchcr: n must be positive";
 
-        real c = 100;
         auto n = v.size();
         la::vec<real> z(v.size(), 0.0);
         z[0] = -2*c*(2*v[0]+1)*(v[1] - v[0] + 1 - v[0]*v[0]);
@@ -55,6 +55,7 @@ public:
             z[i+1][i] = -2*c*(2*v[i] + 1);
 
         }
+        z[0][0] = 2*c*(-1-2*v[0])*(-1-2*v[0]) - 4*c*(1-v[0]-v[0]*v[0]+v[1]);
         z[n-1][n-1] = 2*c;
 
         return z;
@@ -70,7 +71,8 @@ public:
         return function<real>(func, gradient, hessian, starting_point);
     }
 };
-
+template<class real>
+const int fletchcr<real>::c;
 }
 }
 

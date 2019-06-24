@@ -81,7 +81,6 @@ public:
         return function<real>(func, gradient, hessian, starting_point);
     }
 };
-
 }
 }
 
