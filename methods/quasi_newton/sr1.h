@@ -1,7 +1,3 @@
-//
-// Created by Zucchabar Inc on 6/23/2019.
-//
-
 #ifndef NUMERICALOPTIMIZATION_SR1_H
 #define NUMERICALOPTIMIZATION_SR1_H
 
@@ -53,7 +49,6 @@ public:
 
             if(tmp_s_H_dot_y.dot(y) >= r * la::norm(y) * la::norm(tmp_s_H_dot_y) ){
                 H +=  (tmp_s_H_dot_y.outer(tmp_s_H_dot_y))/(tmp_s_H_dot_y.outer(y));
-                cout << "uso";
             }
 
 

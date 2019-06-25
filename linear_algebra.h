@@ -286,6 +286,19 @@ protected:
             return v[i];
         }
     };
+public:
+    template<class T>
+    friend mat<T> operator*(const T val,const mat<T>& matrix){
+        return matrix*val;
+    }
+    template<class T>
+    friend mat<T> operator+(const T val,const mat<T>& matrix){
+        return matrix+val;
+    }
+    template<class T>
+    friend mat<T> operator-(const T val,const mat<T>& matrix){
+        return matrix-val;
+    }
 
 public:
     mat() : a() {}

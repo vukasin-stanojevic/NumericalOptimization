@@ -1,5 +1,5 @@
-#ifndef NUMERICALOPTIMIZATION_DFP_H
-#define NUMERICALOPTIMIZATION_DFP_H
+#ifndef NUMERICALOPTIMIZATION_BFGS_H
+#define NUMERICALOPTIMIZATION_BFGS_H
 
 #include "../base_method.h"
 
@@ -8,9 +8,9 @@ namespace opt {
         namespace quasi_newton {
 
             template<class real>
-            class dfp : public base_method<real>{
+            class bfgs : public base_method<real>{
             public:
-                dfp() : base_method<real>() {}
+                bfgs() : base_method<real>() {}
                 void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, method_params<real>& params) {
                     this->tic();
                     la::vec<real> x0;
@@ -45,9 +45,12 @@ namespace opt {
                         la::vec<real> s = x1 - x0;
                         la::vec<real> y = gr1 - gr0;
 
+
+                        real auxSc = s.dot(y); // auxiliary variable
                         la::vec<real> H_dot_y = H.dot(y);
 
-                        H +=  s.inner(s)/s.dot(s) - (H_dot_y).inner(H_dot_y)/(y.inner(H_dot_y));
+
+                        H +=  s.outer(s)*(auxSc + y.dot(H_dot_y))/(auxSc*auxSc) - (H_dot_y.outer(s) + (s.outer(H_dot_y)))/auxSc ;
 
 
 
@@ -72,5 +75,4 @@ namespace opt {
     }
 }
 
-
-#endif //NUMERICALOPTIMIZATION_DFP_H
+#endif //NUMERICALOPTIMIZATION_BFGS_H

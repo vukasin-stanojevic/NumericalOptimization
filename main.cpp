@@ -23,27 +23,27 @@ int main() {
 //    typedef function::raydan1<double> func;
 //    typedef function::cube<double> func;
 //    typedef function::full_hessian2<double> func;
-//    typedef function::part_pert_quad<double> func;
+    typedef function::part_pert_quad<double> func;
 //    typedef function::ext_psc1<double> func;
 //    typedef function::ext_quad_pen_qp1<double> func;
 //    typedef function::almost_pert_quad<double> func;
 //    typedef function::diagonal1<double> func;
-    typedef function::gen_psc1<double> func;
+//    typedef function::gen_psc1<double> func;
 //    typedef function::fletchcr<double> func;
 
-    const int n = 400;
+    const int n = 100;
 
 
     map<string, double> params;
 //    line_search::binary<double> ls(params);
 //    line_search::fixed_line_search<double> ls(params);
-    line_search::armijo<double> ls(params);
+//    line_search::armijo<double> ls(params);
 //    line_search::goldstein<double> ls(params);
-//    line_search::wolfe<double> ls(params);
+    line_search::wolfe<double> ls(params);
 //    line_search::strong_wolfe<double> ls(params);
 
 
-    method::quasi_newton::dfp<double> opt;
+    method::quasi_newton::bfgs<double> opt;
 //    method::gradient::momentum<double> opt;
 //    method::conjugate_gradient::fletcher_reeves<double> opt;
 
