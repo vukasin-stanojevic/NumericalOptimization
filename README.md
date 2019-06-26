@@ -60,8 +60,10 @@ https://github.com/markomil/vilin-numerical-optimization.git
 
 ## Authors
 
-* **Lazar Stamenkovic** - lazar.stamenkovic@pmf.edu.rs
-* **Igor Stosic** - igor.stosic@pmf.edu.rs
 * **Ivan Stosic** - ivan100sic@gmail.com
+* **Igor Stosic** - igor.stosic@pmf.edu.rs
+* **Lazar Stamenkovic** - lazar.stamenkovic@pmf.edu.rs
+
+
 
 See also the list of [contributors](https://github.com/lazarst96/NumericalOptimisation) who participated in this project.
