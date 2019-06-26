@@ -7,5 +7,6 @@
 #include "methods/quasi_newton/sr1.h"
 #include "methods/quasi_newton/dfp.h"
 #include "methods/quasi_newton/bfgs.h"
+#include "methods/quasi_newton/l_bfgs.h"
 
 #endif //PROJEKATC___METHODS_H

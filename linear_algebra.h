@@ -237,6 +237,7 @@ public:
 
         return z;
     }
+
 };
 
 template<class T>
