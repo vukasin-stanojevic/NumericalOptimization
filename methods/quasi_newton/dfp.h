@@ -23,34 +23,34 @@ public:
 
         la::vec<real> x0;
         la::vec<real>& x1 = x;
-        la::vec<real> gr0;
-        la::vec<real> gr1 = f.gradient(x1);
+        la::vec<real> gradient_prev;
+        la::vec<real> gradient_curr = f.gradient(x1);
 
         la::mat<real> H = la::mat<real>::id(n);
 
         real fcur = f(x1);
         real fprev = fcur + 1;
 
-        while (la::norm(gr1) > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
+        while (la::norm(gradient_curr) > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
             ++this->iter_count;
             ls.push_f_val(fcur);
             ls.set_current_f_val(fcur);
-            ls.set_current_g_val(gr1);
+            ls.set_current_g_val(gradient_curr);
 
-            la::vec<real> direction = (H.dot(gr1))*(-1);
+            la::vec<real> direction = (H.dot(gradient_curr))*(-1);
 
             fprev = fcur;
             x0 = x1;
-            gr0 = gr1;
+            gradient_prev = gradient_curr;
 
             real t = ls(f, x1, direction);
             x1 += direction * t;
 
             fcur = ls.get_current_f_val();
-            gr1 = ls.get_current_g_val();
+            gradient_curr = ls.get_current_g_val();
 
             la::vec<real> s = x1 - x0;
-            la::vec<real> y = gr1 - gr0;
+            la::vec<real> y = gradient_curr - gradient_prev;
 
             la::vec<real> H_dot_y = H.dot(y);
 
@@ -59,7 +59,7 @@ public:
 
         this->toc();
         this->f_min = fcur;
-        this->gr_norm = la::norm(gr1);
+        this->gr_norm = la::norm(gradient_curr);
         this->f_call_count = f.get_call_count();
         this->g_call_count = f.get_grad_count();
         this->h_call_count = f.get_hess_count();

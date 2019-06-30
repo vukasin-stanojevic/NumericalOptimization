@@ -6,6 +6,14 @@ Numerical Optimisation is a C++ library for executing and testing different unco
 
 https://github.com/markomil/vilin-numerical-optimization
 
+## Methods
+
+Will be added
+
+## Line Search methods
+
+Will be added
+
 
 ## Project Structure
 ```

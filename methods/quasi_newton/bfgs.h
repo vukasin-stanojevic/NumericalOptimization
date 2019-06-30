@@ -33,6 +33,8 @@ public:
 
         while (la::norm(gr1) > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
             ++this->iter_count;
+            ls.set_current_f_val(fcur);
+            ls.set_current_g_val(gr1);
 
             la::vec<real> direction = (H.dot(gr1))*(-1);
 

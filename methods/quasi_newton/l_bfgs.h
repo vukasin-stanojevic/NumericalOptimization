@@ -46,6 +46,8 @@ public:
             ++this->iter_count;
 
             la::vec<real> direction = this->two_loop_recursion(H,gradient_curr,s_cache,y_cache,rho_cache);
+            ls.set_current_f_val(fcur);
+            ls.set_current_g_val(gradient_curr);
 
             fprev = fcur;
             x0 = x1;

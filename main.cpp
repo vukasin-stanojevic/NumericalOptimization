@@ -26,7 +26,7 @@ int main() {
     // typedef function::gen_psc1<double> func;
     // typedef function::fletchcr<double> func;
 
-    const int n = 100;
+    const int n = 1000;
 
 
     map<string, double> params;
@@ -41,10 +41,10 @@ int main() {
     // method::gradient::gradient_descent<double> opt;
     // method::gradient::momentum<double> opt;
     // method::conjugate_gradient::fletcher_reeves<double> opt;
-    method::quasi_newton::sr1<double> opt;
+    // method::quasi_newton::sr1<double> opt;
     // method::quasi_newton::dfp<double> opt;
     // method::quasi_newton::bfgs<double> opt;
-    // method::quasi_newton::l_bfgs<double> opt;
+    method::quasi_newton::l_bfgs<double> opt;
 
     auto f = func::getFunction();
     auto x = f.starting_point(n);
