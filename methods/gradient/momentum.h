@@ -1,7 +1,7 @@
 #ifndef PROJEKATC___MOMENTUM_H
 #define PROJEKATC___MOMENTUM_H
 
-#include "base_method.h"
+#include "../base_method.h"
 
 namespace opt {
 namespace method {

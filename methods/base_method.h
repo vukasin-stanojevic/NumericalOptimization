@@ -64,8 +64,8 @@ protected:
     real working_precision; // stops the method if optimization becomes too slow
 
     size_t iter_count; // number of iterations in the method (outer) loop
-    size_t f_call_count; // number of hessian evaluations
-    size_t g_call_count; // number of hessian evaluations
+    size_t f_call_count; // number of function evaluations
+    size_t g_call_count; // number of gradient evaluations
     size_t h_call_count; // number of hessian evaluations
     double cpu_time; // total method cpu time in seconds
     real gr_norm; // resulting gradient norm

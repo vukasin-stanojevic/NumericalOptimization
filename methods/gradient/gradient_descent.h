@@ -1,7 +1,7 @@
 #ifndef PROJEKATC___GRADIENT_DESCENT_H
 #define PROJEKATC___GRADIENT_DESCENT_H
 
-#include "base_method.h"
+#include "../base_method.h"
 
 namespace opt {
 namespace method {

@@ -25,7 +25,7 @@ public:
             throw "diagonal1: n must be positive";
         la::vec<real> z(v.size(), 0.0);
         for (size_t i=0; i<v.size(); ++i) {
-            z[i] = exp(v[i]) - i+1;
+            z[i] = exp(v[i]) - (i+1);
         }
         return z;
     }

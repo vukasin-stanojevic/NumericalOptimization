@@ -2,7 +2,7 @@
 #define PROJEKATC___FLETCHER_REEVES_H
 
 #include <cmath>
-#include "base_method.h"
+#include "../base_method.h"
 
 namespace opt {
 namespace method {

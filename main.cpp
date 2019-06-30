@@ -26,21 +26,25 @@ int main() {
     // typedef function::gen_psc1<double> func;
     // typedef function::fletchcr<double> func;
 
-    const int n = 1000;
+    const int n = 100;
+
 
     map<string, double> params;
     // line_search::binary<double> ls(params);
     // line_search::fixed_step_size<double> ls(params);
     // line_search::armijo<double> ls(params);
     // line_search::goldstein<double> ls(params);
-    // line_search::wolfe<double> ls(params);
-    line_search::strong_wolfe<double> ls(params);
+    line_search::wolfe<double> ls(params);
+    // line_search::strong_wolfe<double> ls(params);
 
 
     // method::gradient::gradient_descent<double> opt;
     // method::gradient::momentum<double> opt;
-    method::conjugate_gradient::fletcher_reeves<double> opt;
-
+    // method::conjugate_gradient::fletcher_reeves<double> opt;
+    method::quasi_newton::sr1<double> opt;
+    // method::quasi_newton::dfp<double> opt;
+    // method::quasi_newton::bfgs<double> opt;
+    // method::quasi_newton::l_bfgs<double> opt;
 
     auto f = func::getFunction();
     auto x = f.starting_point(n);
