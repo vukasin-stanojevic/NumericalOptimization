@@ -1,7 +1,6 @@
 #ifndef PROJEKATC___LINEAR_ALGEBRA_H
 #define PROJEKATC___LINEAR_ALGEBRA_H
 
-
 #include <cstdlib>
 #include <initializer_list>
 #include <iostream>

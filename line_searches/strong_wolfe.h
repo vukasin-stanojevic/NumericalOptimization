@@ -11,11 +11,11 @@ template<class real>
 class strong_wolfe : public base_line_search<real> {
 private:
     real steepness; // rho
-    real initial_step;
+    real initial_step; // start point
     real sigma;
     real xi;
     real max_step;
-    real step_factor;
+    real step_factor; // M
 public:
     strong_wolfe(std::map<std::string, real>& params) {
         std::map<std::string, real> p;
@@ -35,16 +35,19 @@ public:
         params = p;
     }
 
-    real operator()(function::function<real>& func, la::vec<real>& x, la::vec<real>& d) {
-        real a1 = 0, a2 = initial_step;
-        real f0 = func(x);
-        real f1 = f0;
-        real f2 = func(x + d*a2);
-        real pad0 = func.gradient(x).dot(d);
-        real pad1 = pad0;
-        real pad2 = func.gradient(x + d*a2).dot(d);
+    real operator()(function::function<real>& f, la::vec<real>& x, la::vec<real>& d) {
+        this->iter_count = 0;
 
-        size_t iter_num = 1;
+        real a1 = 0;
+        real a2 = this->f_values.size() >= 2 ? this->compute_initial_step(this->f_values.end()[-1], this->f_values.end()[-2], this->current_g_val, d) : initial_step;
+
+        real f0 = this->get_current_f_val();
+        real f1 = f0;
+        real f2;
+
+        real pad0 = this->get_current_g_val().dot(d);
+        real pad1 = pad0;
+        real pad2;
 
         auto noc_zoom = [&]() {
             real a;
@@ -55,11 +58,13 @@ public:
                     a = this->cubic_interpolation(a2, a1, f2, f1, pad2, pad1);
                 }
 
-                real ff = func(x + d*a);
-                real pad = func.gradient(x + d*a).dot(d);
+                real ff = f(x + d*a);
+                la::vec<real> gr = f.gradient(x + d*a);
+                real pad = gr.dot(d);
 
-                if ((fabs(ff - f1) / (1 + fabs(ff)) < xi) ||
-                    (fabs(ff - f2) / (1 + fabs(ff)) < xi)) {
+                if ((fabs(ff - f1) / (1 + fabs(ff)) < xi) || (fabs(ff - f2) / (1 + fabs(ff)) < xi)) {
+                    this->set_current_f_val(ff);
+                    this->set_current_g_val(gr);
                     return a;
                 }
 
@@ -72,6 +77,8 @@ public:
                 } else {
                     if (fabs(pad) <= -sigma*pad0) {
                         // strong wolfe fullfilled
+                        this->set_current_f_val(ff);
+                        this->set_current_g_val(gr);
                         return a;
                     }
                     if (pad*(a2-a1) >= 0) { // if slope positive and a2 > a1
@@ -87,8 +94,14 @@ public:
         };
 
         while (1) {
+            ++this->iter_count;
+
+            f2 = f(x + d*a2);
+            la::vec<real> gr = f.gradient(x + d*a2);
+            pad2 = gr.dot(d);
+
             // armijo condition: check if current iteration violates sufficient decrease
-            if (f2 > f0 + pad0*steepness*a2 || (f2 >= f1 && iter_num > 1)) {
+            if (f2 > f0 + pad0*steepness*a2 || (f2 >= f1 && this->iter_count > 1)) {
                 // there has to be an acceptable point between t0 and t1 because rho (steepness) > sigma
                 return noc_zoom();
             }
@@ -96,6 +109,8 @@ public:
             // current iteration has sufficient decrease, but are we too close?
             if (fabs(pad2) <= -sigma*pad0) {
                 // strong wolfe fullfilled, quit
+                this->current_f_val = f2;
+                this->current_g_val = gr;
                 return a2;
             }
 
@@ -105,14 +120,12 @@ public:
                 return noc_zoom();
             }
 
+            // update values
             a1 = a2;
             f1 = f2;
             pad1 = pad2;
 
             a2 = fmin(a2*step_factor, max_step);
-            f2 = func(x + d*a2);
-            pad2 = func.gradient(x + d*a2).dot(d);
-            ++iter_num;
         }
     }
 };

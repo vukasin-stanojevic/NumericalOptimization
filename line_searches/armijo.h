@@ -10,7 +10,7 @@ template<class real>
 class armijo : public base_line_search<real> {
 private:
     real steepness; // rho
-    real initial_step;
+    real initial_step; // start point
 public:
     armijo(std::map<std::string, real>& params) {
         std::map<std::string, real> p;
@@ -22,22 +22,23 @@ public:
         params = p;
     }
 
-    real operator()(function::function<real>& func, la::vec<real>& x, la::vec<real>& d) {
-        real f0 = func(x); // value in starting point
+    real operator()(function::function<real>& f, la::vec<real>& x, la::vec<real>& d) {
+        this->iter_count = 0;
 
-        real pad = func.gradient(x).dot(d); // the rate at which f is growing in direction d
+        real f0 = this->current_f_val; // value in starting point
+        real pad = this->current_g_val.dot(d); // the rate at which f is growing in direction d
         // in other words, it's an approximate value of f(x+d) - f(x)
 
-        real a_curr = initial_step; // nalazimo se u tacki x + d*a
+        real a_curr = this->f_values.size() >= 2 ? this->compute_initial_step(this->f_values.end()[-1], this->f_values.end()[-2], this->current_g_val, d) : initial_step;
 
         real f_curr, f_prev, a_prev;
-        f_curr = func(x + d * a_curr);
-
-        size_t iter_num = 1;
+        f_curr = f(x + d * a_curr);
 
         while (f_curr > f0 - steepness * a_curr * pad) {
+            ++this->iter_count;
+
             real a_new;
-            if (iter_num == 1) {
+            if (this->iter_count == 1) {
                 // find next point using quadratic interpolation
                 a_new = pad * a_curr * a_curr / 2 / (f0 - f_curr + pad * a_curr);
             } else {
@@ -57,11 +58,11 @@ public:
             a_curr = a_new;
 
             f_prev = f_curr;
-            f_curr = func(x + d * a_curr);
-
-            ++iter_num;
+            f_curr = f(x + d * a_curr);
         }
 
+        this->current_f_val = f_curr;
+        this->current_g_val = f.gradient(x + d * a_curr);
         return a_curr;
     }
 };

@@ -1,7 +1,7 @@
 #ifndef PROJEKATC___FUNCTION_H
 #define PROJEKATC___FUNCTION_H
 
-#include "../linear_algebra.h"
+#include "../utilities/linear_algebra.h"
 
 namespace opt {
 namespace function {
@@ -14,39 +14,39 @@ public:
 	using hess = la::mat<real>(*)(const la::vec<real>&);
 	using start = la::vec<real>(*)(const size_t);
 
-	function(func f,grad g, hess h, start s) : f(f), g(g), h(h), s(s), call_count(0), grad_count(0), hess_count(0) {}
+	function(func f, grad g, hess h, start s) : f(f), g(g), h(h), s(s), call_count(0), grad_count(0), hess_count(0) {}
 
-	real operator()(const la::vec<real>& v) {
+	real operator()(const la::vec<real>& x) {
 		++call_count;
-		return f(v);
+		return f(x);
 	}
 
-	la::vec<real> gradient(const la::vec<real> &v) {
+	la::vec<real> gradient(const la::vec<real>& x) {
 		++grad_count;
-		return g(v);
+		return g(x);
 	}
 
-	la::mat<real> hessian(const la::vec<real> &v) {
+	la::mat<real> hessian(const la::vec<real>& x) {
 		++hess_count;
-		return h(v);
+		return h(x);
 	}
 
 	la::vec<real> starting_point(const size_t n) {
 		return s(n);
 	}
 
-	size_t get_call_count(){
+	size_t get_call_count() const {
 		return call_count;
 	}
 
-	size_t get_grad_count(){
+	size_t get_grad_count() const {
 		return grad_count;
 	}
 
-	size_t get_hess_count(){
+	size_t get_hess_count() const {
 		return hess_count;
 	}
-private:
+protected:
 	func f;
 	grad g;
 	hess h;

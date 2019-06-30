@@ -11,41 +11,47 @@ namespace conjugate_gradient {
 template<class real>
 class fletcher_reeves : public base_method<real> {
 public:
-    fletcher_reeves() : base_method<real>() {}
+    fletcher_reeves() : base_method<real>(), nu(0.1) {}
+    fletcher_reeves(real nu) : base_method<real>(), nu(nu) {}
+    fletcher_reeves(real nu, real epsilon) : base_method<real>(epsilon), nu(nu) {}
+    fletcher_reeves(real nu, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), nu(nu) {}
+    fletcher_reeves(real nu, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), nu(nu) {}
+
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
         this->tic();
 
-        real f_prev = f(x);
-        la::vec<real> gr_old = f.gradient(x);
-
-        la::vec<real> p0 = -gr_old;
-        la::vec<real> s0 = p0;
-        x += p0 * ls(f, x, p0);
-
         real f_curr = f(x);
-        la::vec<real> gr = f.gradient(x);
+        real f_prev = f_curr + 1;
 
-        while (la::norm(gr) > 1e-7 && this->iter_count < 10000 && fabs(f_prev - f_curr)/(1 + fabs(f_curr)) > 1e-16) {
+        la::vec<real> gr = f.gradient(x);
+        la::vec<real> gr_old;
+
+        la::vec<real> pk = -gr;
+
+        while (la::norm(gr) > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
             ++this->iter_count;
-            //std::cerr << this->iter_count << ": " << x << " grnorm = " << la::norm(gr) << '\n';
+            ls.push_f_val(f_curr);
+            ls.set_current_f_val(f_curr);
+            ls.set_current_g_val(gr);
+
+            f_prev = f_curr;
+            gr_old = gr;
+
+            x += pk * ls(f, x, pk);
+
+            f_curr = ls.get_current_f_val();
+            gr = ls.get_current_g_val();
 
             real beta_fr = gr.dot(gr) / gr_old.dot(gr_old);
 
-            // restart
-            if (gr.dot(gr_old) / gr.dot(gr) > 0.1) {
+            // if restart coefficient greater than nu, apply reset
+            if (gr.dot(gr_old) / gr.dot(gr) > nu) {
                 beta_fr = 0;
             }
 
-            la::vec<real> p1 = -gr; // steepest direction at xn
-            la::vec<real> s1 = p1 + s0 * beta_fr; // update the conjugate direction
-            x += s1 * ls(f, x, s1);
-
-            s0 = s1;
-            f_prev = f_curr;
-            f_curr = f(x);
-            gr_old = gr;
-            gr = f.gradient(x);
+            pk *= beta_fr;
+            pk -= gr;
         }
 
         this->toc();
@@ -55,6 +61,8 @@ public:
         this->g_call_count = f.get_grad_count();
         this->h_call_count = f.get_hess_count();
     }
+protected:
+    real nu; // used for conditionally restarting beta
 };
 
 }

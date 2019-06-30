@@ -7,11 +7,11 @@ namespace opt {
 namespace line_search {
 
 template<class real>
-class fixed_line_search : public base_line_search<real> {
+class fixed_step_size : public base_line_search<real> {
 private:
-    real initial_step;
+    real initial_step; // start point
 public:
-    fixed_line_search(std::map<std::string, real>& params) {
+    fixed_step_size(std::map<std::string, real>& params) {
         std::map<std::string, real> p;
         p["initial_step"] = 0.1;
         this->rest(p, params);
@@ -19,7 +19,10 @@ public:
         params = p;
     }
 
-    real operator()(function::function<real>& func, la::vec<real>& x, la::vec<real>& d) {
+    real operator()(function::function<real>& f, la::vec<real>& x, la::vec<real>& d) {
+        la::vec<real> xx = x + d * initial_step;
+        this->current_f_val = f(xx);
+        this->current_g_val = f.gradient(xx);
         return initial_step;
     }
 };
