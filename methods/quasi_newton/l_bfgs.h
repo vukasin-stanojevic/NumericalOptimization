@@ -44,10 +44,11 @@ public:
 
         while (la::norm(gradient_curr) > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
             ++this->iter_count;
-
-            la::vec<real> direction = this->two_loop_recursion(H,gradient_curr,s_cache,y_cache,rho_cache);
+            ls.push_f_val(fcur);
             ls.set_current_f_val(fcur);
             ls.set_current_g_val(gradient_curr);
+
+            la::vec<real> direction = this->two_loop_recursion(H,gradient_curr,s_cache,y_cache,rho_cache);
 
             fprev = fcur;
             x0 = x1;

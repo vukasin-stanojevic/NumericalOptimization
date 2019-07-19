@@ -14,7 +14,7 @@ namespace line_search {
 template<class real>
 class base_line_search {
 public:
-    base_line_search() : iter_count(0) {}
+    base_line_search() : iter_count(0), c(0.0) {}
 
     virtual real operator()(function::function<real>& f, la::vec<real>& x, la::vec<real>& d) = 0;
 
@@ -38,6 +38,10 @@ public:
         current_g_val = g_val;
     }
 
+    void set_c(real c) {
+        this->c = c;
+    }
+
     void push_f_val(real val) {
         f_values.push_back(val);
     }
@@ -46,6 +50,7 @@ protected:
     std::vector<real> f_values; // list of all function values from previous iterations
     real current_f_val; // the current operating function value of x; used to exchange data between the method and the line search
     la::vec<real> current_g_val; // the current operating gradient value of x; used to exchange data between the method and the line search
+    real c; // number based on f_curr only used in approx_wolfe line search passed from cg_descent method
 
     // Copies pairs from the second to the first map. Used in concrete constructors to override
     // default line search parameters.

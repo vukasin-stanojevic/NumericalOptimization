@@ -7,5 +7,6 @@
 #include "line_searches/goldstein.h"
 #include "line_searches/wolfe.h"
 #include "line_searches/strong_wolfe.h"
+#include "line_searches/approx_wolfe.h"
 
 #endif //PROJEKATC___LINE_SEARCHES_H

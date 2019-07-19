@@ -1,5 +1,5 @@
-#ifndef PROJEKATC___FLETCHER_REEVES_H
-#define PROJEKATC___FLETCHER_REEVES_H
+#ifndef POLAK_RIBIERE_H_INCLUDED
+#define POLAK_RIBIERE_H_INCLUDED
 
 #include <cmath>
 #include "../base_method.h"
@@ -9,13 +9,13 @@ namespace method {
 namespace conjugate_gradient {
 
 template<class real>
-class fletcher_reeves : public base_method<real> {
+class polak_ribiere : public base_method<real> {
 public:
-    fletcher_reeves() : base_method<real>(), nu(0.1) {}
-    fletcher_reeves(real nu) : base_method<real>(), nu(nu) {}
-    fletcher_reeves(real nu, real epsilon) : base_method<real>(epsilon), nu(nu) {}
-    fletcher_reeves(real nu, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), nu(nu) {}
-    fletcher_reeves(real nu, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), nu(nu) {}
+    polak_ribiere() : base_method<real>(), nu(0.1) {}
+    polak_ribiere(real nu) : base_method<real>(), nu(nu) {}
+    polak_ribiere(real nu, real epsilon) : base_method<real>(epsilon), nu(nu) {}
+    polak_ribiere(real nu, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), nu(nu) {}
+    polak_ribiere(real nu, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), nu(nu) {}
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
@@ -43,15 +43,15 @@ public:
             f_curr = ls.get_current_f_val();
             gr = ls.get_current_g_val();
 
-            real beta_fr = gr.dot(gr) / gr_old.dot(gr_old);
+            real beta_pr = gr.dot(gr - gr_old) / gr_old.dot(gr_old);
 
             // if restart coefficient greater than nu, apply reset
             real rc = fabs(gr.dot(gr_old)) / gr.dot(gr);
             if (rc > nu) {
-                beta_fr = 0;
+                beta_pr = 0;
             }
 
-            pk *= beta_fr;
+            pk *= beta_pr;
             pk -= gr;
         }
 
@@ -70,4 +70,4 @@ protected:
 }
 }
 
-#endif //PROJEKATC___FLETCHER_REEVES_H
+#endif //POLAK_RIBIERE_H_INCLUDED
