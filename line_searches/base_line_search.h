@@ -45,6 +45,10 @@ public:
     void push_f_val(real val) {
         f_values.push_back(val);
     }
+
+    void clear_f_vals() {
+        f_values.clear();
+    }
 protected:
     size_t iter_count; // number of iterations in the line search (inner) loop
     std::vector<real> f_values; // list of all function values from previous iterations

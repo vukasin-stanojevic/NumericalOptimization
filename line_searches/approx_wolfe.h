@@ -45,6 +45,9 @@ public:
             prev_step = initial_step;
         }
 
+        if (this->c == 0) {
+            this->c = this->f_values.end()[-1];
+        }
         real epsilon = eps * this->c;
 
         la::vec<real>& gr = this->current_g_val;
@@ -109,7 +112,7 @@ public:
             der_bj = der_b;
         }
     }
-
+private:
     void initial(function::function<real>& f, la::vec<real>& x, real phi0, la::vec<real>& der0, real der_phi0, la::vec<real>& dir, size_t k, real c_old, real& c, real& phi_c) {
         real psi0 = 0.01;
         real psi1 = 0.1;

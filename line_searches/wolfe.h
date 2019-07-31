@@ -51,13 +51,8 @@ public:
         real pad2;
 
         auto noc_zoom = [&]() {
-            real a;
             while (1) {
-                if (a1 < a2) {
-                    a = this->cubic_interpolation(a1, a2, f1, f2, pad1, pad2);
-                } else {
-                    a = this->cubic_interpolation(a2, a1, f2, f1, pad2, pad1);
-                }
+                real a = a1 < a2 ? this->cubic_interpolation(a1, a2, f1, f2, pad1, pad2) : this->cubic_interpolation(a2, a1, f2, f1, pad2, pad1);
 
                 real ff = f(x + d*a);
                 la::vec<real> gr = f.gradient(x + d*a);

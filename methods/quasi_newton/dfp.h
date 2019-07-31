@@ -17,6 +17,8 @@ public:
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
+        ls.clear_f_vals();
+        
         this->tic();
 
         size_t n = x.size();
