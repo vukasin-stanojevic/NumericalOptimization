@@ -1,4 +1,4 @@
-# Numerical Optimisation
+# Numerical Optimization
 
 Numerical Optimisation is a C++ library for executing and testing different unconstrained optimisation algorithms. The project is based on Vilin written in MATLAB. Although this library is standalone, the idea is to eventually delegate heavy Vilin computation directly to C++ to speed it up.
 
