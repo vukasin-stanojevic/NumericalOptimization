@@ -12,7 +12,7 @@
 #include <mutex>
 #include <functional>
 
-#define MAX_THREAD_NUM 10
+#define MAX_THREAD_NUM 100
 
 
 namespace la {
