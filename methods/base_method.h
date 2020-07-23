@@ -2,9 +2,12 @@
 #define PROJEKATC___BASE_METHOD_H
 
 #include <chrono>
+#include <vector>
 #include "../functions/function.h"
 #include "../line_searches/base_line_search.h"
 #include "../utilities/linear_algebra.h"
+
+#define MAX_ITER 1000
 
 namespace opt {
 namespace method {
@@ -12,7 +15,7 @@ namespace method {
 template<class real>
 class base_method {
 public:
-    base_method(real epsilon = 1e-6, size_t max_iter = 10000, real working_precision = 1e-16)
+    base_method(real epsilon = 1e-6, size_t max_iter = MAX_ITER, real working_precision = 1e-16)
                   : iter_count(0), f_call_count(0), g_call_count(0),
                     h_call_count(0), gr_norm(-1), f_min(0), cpu_time(0),
                     epsilon(epsilon), max_iter(max_iter), working_precision(working_precision) {}
@@ -58,6 +61,14 @@ public:
     size_t get_h_call_count() const {
         return h_call_count;
     }
+
+    std::vector<real> get_gradient_norms() const {
+        return this->gr_norms;
+    }
+
+    std::string get_method_name() const {
+        return this->method_name;
+    }
 protected:
     real epsilon; // stops the method if gradient norm is <= epsilon
     size_t max_iter; // maximum number of iterations in the outer loop
@@ -70,6 +81,8 @@ protected:
     double cpu_time; // total method cpu time in seconds
     real gr_norm; // resulting gradient norm
     real f_min; // resulting minimal function value
+    std::vector<real> gr_norms; // gradient norms through iterations
+    std::string method_name = "unset";
 
     // Captures the start time of the method. Should be called before toc() and
     // at the beginning of the method body.

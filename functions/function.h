@@ -6,6 +6,16 @@
 namespace opt {
 namespace function {
 
+template<typename T>
+struct reciprocal_of_sqrt_of_sum {
+    T operator ()(T t1, T t2 ) const { return ((T)1)/sqrt(t1 + t2); };
+};
+
+template<typename T>
+struct sqrt_of_sum {
+    T operator ()(T t1, T t2 ) const { return ((T)1)/sqrt(t1 + t2); };
+};
+
 template<class real>
 class function {
 public:

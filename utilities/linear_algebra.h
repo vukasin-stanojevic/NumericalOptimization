@@ -5,6 +5,15 @@
 #include <initializer_list>
 #include <iostream>
 #include <cmath>
+#include <thread>
+#include<vector>
+#include<atomic>
+#include<memory>
+#include <mutex>
+#include <functional>
+
+#define MAX_THREAD_NUM 10
+
 
 namespace la {
 
@@ -13,6 +22,20 @@ class mat;
 
 template<class T>
 class vec {
+private:
+    template<class Func>
+    static void elementwise_binary_op(const vec<T>* left, const vec<T>* right, vec<T>* result, Func op, int i_start, int i_end) {
+        for (int i = i_start; i < i_end; ++i) {
+            (*result)[i] = op((*left)[i], (*right)[i]);
+        }
+    }
+    template<class Func>
+    static void vec_scalar_binary_op(const vec<T>* left, const T right, vec<T>* result, Func op, int i_start, int i_end) {
+        for (int i = i_start; i < i_end; ++i) {
+            (*result)[i] = op((*left)[i], right);
+        }
+    }
+
 protected:
     size_t n;
     T* a;
@@ -102,26 +125,26 @@ public:
     // Skalarni compound operatori
 
     vec& operator+= (const T& x) {
-        for (size_t i=0; i<n; i++)
-            a[i] += x;
+        vec::launch_binary_op_multithread<std::plus<T>>(this, x, this);
+
         return *this;
     }
 
     vec& operator-= (const T& x) {
-        for (size_t i=0; i<n; i++)
-            a[i] -= x;
+        vec::launch_binary_op_multithread<std::minus<T>>(this, x, this);
+
         return *this;
     }
 
     vec& operator*= (const T& x) {
-        for (size_t i=0; i<n; i++)
-            a[i] *= x;
+        vec::launch_binary_op_multithread<std::multiplies<T>>(this, x, this);
+
         return *this;
     }
 
     vec& operator/= (const T& x) {
-        for (size_t i=0; i<n; i++)
-            a[i] /= x;
+        vec::launch_binary_op_multithread<std::divides<T>>(this, x, this);
+
         return *this;
     }
 
@@ -154,29 +177,29 @@ public:
     // Vektorski pointwise compound operatori
     vec& operator+= (const vec& x) {
         check_dims(x);
-        for (size_t i=0; i<n; i++)
-            a[i] += x.a[i];
+        vec::launch_binary_op_multithread<std::plus<T>>(this, &x, this);
+
         return *this;
     }
 
     vec& operator-= (const vec& x) {
         check_dims(x);
-        for (size_t i=0; i<n; i++)
-            a[i] -= x.a[i];
+        vec::launch_binary_op_multithread<std::minus<T>>(this, &x, this);
+
         return *this;
     }
 
     vec& operator*= (const vec& x) {
         check_dims(x);
-        for (size_t i=0; i<n; i++)
-            a[i] *= x.a[i];
+        vec::launch_binary_op_multithread<std::multiplies<T>>(this, &x, this);
+
         return *this;
     }
 
     vec& operator/= (const vec& x) {
         check_dims(x);
-        for (size_t i=0; i<n; i++)
-            a[i] /= x.a[i];
+        vec::launch_binary_op_multithread<std::divides<T>>(this, &x, this);
+
         return *this;
     }
 
@@ -212,10 +235,27 @@ public:
     // Skalarni proizvod
     T inner(const vec& x) const {
         check_dims(x);
-        T z = 0;
-        for (size_t i=0; i<n; i++)
-            z += a[i] * x.a[i];
-        return z;
+        T result = 0;
+        std::mutex mutex;
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+            size_t work_by_thread = n / processor_count;
+            int last_thread_additional_work = n - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(&vec<T>::inner_product_task, this, &x, &result, &mutex, k*work_by_thread, (k+1)*work_by_thread));
+            }
+            threads.push_back(std::thread(&vec<T>::inner_product_task, this, &x, &result, &mutex, k*work_by_thread, (k+1)*work_by_thread + last_thread_additional_work));
+
+            for (auto& th : threads) th.join();
+        } else {
+            inner_product_task(this, &x, &result, &mutex, 0, x.size());
+        }
+
+        return result;
     }
 
     // Alias za inner
@@ -230,11 +270,89 @@ public:
 
         mat<T> z(n, x.n);
 
-        for (size_t i=0; i<n; i++)
-            for (size_t j=0; j<x.n; j++)
-                z[i][j] = a[i] * x.a[j];
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+            size_t work_by_thread = n / processor_count;
+            int last_thread_additional_work = n - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(&vec<T>::outer_product_task, this, &x, &z, k*work_by_thread, (k+1)*work_by_thread));
+            }
+            threads.push_back(std::thread(&vec<T>::outer_product_task, this, &x, &z, k*work_by_thread, (k+1)*work_by_thread + last_thread_additional_work));
+
+            for (auto& th : threads) th.join();
+        } else {
+            outer_product_task(this, &x, &z, 0, n);
+        }
 
         return z;
+    }
+
+    template<class Func>
+    static void launch_binary_op_multithread(const vec<T>* left, const vec<T>* right, vec<T>* result) {
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+            size_t work_by_thread = left->n / processor_count;
+            int last_thread_additional_work = left->n - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(&vec<T>::elementwise_binary_op<Func>, left, right, result, Func(),
+                                              k * work_by_thread, (k + 1) * work_by_thread));
+            }
+            threads.push_back(std::thread(&vec<T>::elementwise_binary_op<Func>, left, right, result, Func(), k * work_by_thread,
+                                          (k + 1) * work_by_thread + last_thread_additional_work));
+
+            for (auto &th : threads) th.join();
+        } else {
+            vec<T>::elementwise_binary_op(left, right, result, Func(), 0, left->n);
+        }
+    }
+
+    template<class Func>
+    static void launch_binary_op_multithread(const vec<T>* left, const T right, vec<T>* result) {
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+            size_t work_by_thread = left->n / processor_count;
+            int last_thread_additional_work = left->n - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(&vec<T>::vec_scalar_binary_op<Func>, left, right, result, Func(),
+                                              k * work_by_thread, (k + 1) * work_by_thread));
+            }
+            threads.push_back(std::thread(&vec<T>::vec_scalar_binary_op<Func>, left, right, result, Func(), k * work_by_thread,
+                                          (k + 1) * work_by_thread + last_thread_additional_work));
+
+            for (auto &th : threads) th.join();
+        } else {
+            vec<T>::vec_scalar_binary_op(left, right, result, Func(), 0, left->n);
+        }
+    }
+
+private:
+
+    static void inner_product_task(const vec<T> *first, const vec<T> *second, T *result, std::mutex* mtx, size_t i_start, size_t i_end) {
+        T local_sum = 0;
+        for (int i = i_start; i < i_end; ++i)
+            local_sum += (*first)[i] * (*second)[i];
+
+        mtx->lock();
+        (*result) += local_sum;
+        mtx->unlock();
+    }
+
+    static void outer_product_task(const vec<T>* first, const vec<T>* second, mat<T>* result, size_t i_start, size_t i_end) {
+        for (int i = i_start; i < i_end; ++i)
+            for (int j = 0; j < first->size(); ++j)
+                (*result)[i][j] = (*first)[i] * (*second)[j];
     }
 
 };
@@ -342,7 +460,6 @@ public:
             a[i++] = *it0;
             ++it0;
         }
-
     }
 
     size_t size() const { return rows() * cols(); }
@@ -474,10 +591,24 @@ public:
             throw "operand size mismatch";
 
         mat tmp(rows(), x.cols(), 0);
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                for (size_t k=0; k<x.cols(); k++)
-                    tmp[i][k] += a[i][j] * x[j][k];
+
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+            size_t work_by_thread = tmp.rows() / processor_count;
+            int last_thread_additional_work = tmp.rows() - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(&mat<U>::mat_mat_product_task, this, &x, &tmp, k*work_by_thread, (k+1)*work_by_thread));
+            }
+            threads.push_back(std::thread(&mat<U>::mat_mat_product_task, this, &x, &tmp, k*work_by_thread, (k+1)*work_by_thread + last_thread_additional_work));
+
+            for (auto& th : threads) th.join();
+        } else {
+            mat_mat_product_task(this, &x, &tmp, 0, tmp.rows());
+        }
 
         return tmp;
     }
@@ -490,9 +621,24 @@ public:
             throw "operand size mismatch";
 
         vec<U> tmp(rows(), (U)0);
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                tmp[i] += a[i][j] * x[j];
+
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+            size_t work_by_thread = x.size() / processor_count;
+            int last_thread_additional_work = x.size() - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(&mat<U>::mat_vec_product_task, this, &x, &tmp, k*work_by_thread, (k+1)*work_by_thread));
+            }
+            threads.push_back(std::thread(&mat<U>::mat_vec_product_task, this, &x, &tmp, k*work_by_thread, (k+1)*work_by_thread + last_thread_additional_work));
+
+            for (auto& th : threads) th.join();
+        } else {
+            mat_vec_product_task(this, &x, &tmp, 0, tmp.size());
+        }
 
         return tmp;
     }
@@ -502,6 +648,7 @@ public:
             return mat();
 
         mat tmp(cols(), rows());
+
         for (size_t i=0; i<rows(); i++)
             for (size_t j=0; j<cols(); j++)
                 tmp[j][i] = a[i][j];
@@ -516,8 +663,35 @@ public:
         return t;
     }
 
+
     template<class V>
     friend std::ostream& operator<< (std::ostream& os, const mat<V>& v);
+
+private:
+    static void mat_vec_product_task(const mat<U>* M, const vec<U>* v, vec<U>* result, int i_start, int i_end) {
+        U sum;
+        for (int i = i_start; i < i_end; ++i) {
+            sum = 0;
+            for (int j = 0; j < v->size(); j++) {
+                sum += (*M)[i][j] * (*v)[j];
+            }
+            (*result)[i] = sum;
+        }
+    }
+
+    static void mat_mat_product_task(mat<U>* A, mat<U>* B, mat<U>* C, int i_start, int i_end) {
+        //computes entries for Cij, where i >= i_start && i < i_end && j >=0 && j < C.cols()
+        U sum;
+        for (int i = i_start; i < i_end; ++i) {
+            for (int j = 0; j < C->cols(); ++j) {
+                sum = 0;
+                for (int k = 0; k < A->cols(); ++k) {
+                    sum += A[i][k] * B[k][j];
+                }
+                C[i][j] = sum;
+            }
+        }
+    }
 
 };
 

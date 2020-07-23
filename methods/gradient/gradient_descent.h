@@ -10,14 +10,17 @@ namespace gradient {
 template<class real>
 class gradient_descent : public base_method<real> {
 public:
-    gradient_descent() : base_method<real>() {}
-    gradient_descent(real epsilon) : base_method<real>(epsilon) {}
-    gradient_descent(real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter) {}
-    gradient_descent(real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision) {}
+    gradient_descent() : base_method<real>() {
+        this->method_name = "Gradient descent";
+    }
+    gradient_descent(real epsilon) : base_method<real>(epsilon) {this->method_name = "Gradient descent";}
+    gradient_descent(real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter) {this->method_name = "Gradient descent";}
+    gradient_descent(real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision) {this->method_name = "Gradient descent";}
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
         ls.clear_f_vals();
+        this->gr_norms.clear();
         
         this->tic();
 
@@ -25,8 +28,8 @@ public:
         real f_prev = f_curr + 1; // should always pass the first working precision condition
 
         la::vec<real> gr = f.gradient(x);
-
-        while (la::norm(gr) > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
+        real gr_norm = la::norm(gr);
+        while (gr_norm > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
             ++this->iter_count;
             ls.push_f_val(f_curr);
             ls.set_current_f_val(f_curr);
@@ -38,6 +41,8 @@ public:
             f_prev = f_curr;
             f_curr = ls.get_current_f_val();
             gr = ls.get_current_g_val();
+            gr_norm = la::norm(gr);
+            this->gr_norms.push_back(gr_norm);
         }
 
         this->toc();

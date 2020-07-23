@@ -10,10 +10,11 @@ namespace gradient {
 template<class real>
 class momentum : public base_method<real> {
 public:
-    momentum() : base_method<real>() {}
+    momentum() : base_method<real>() {this->method_name = "Momentum";}
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
         ls.clear_f_vals();
+        this->gr_norms.clear();
         
         this->tic();
 
@@ -21,8 +22,8 @@ public:
         real f_prev = f_curr + 1;
 
         la::vec<real> gr = f.gradient(x);
-
-        while (la::norm(gr) > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
+        real gr_norm = la::norm(gr);
+        while (gr_norm > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
             ++this->iter_count;
             ls.push_f_val(f_curr);
             ls.set_current_f_val(f_curr);
@@ -35,6 +36,8 @@ public:
             f_prev = f_curr;
             f_curr = ls.get_current_f_val();
             gr = ls.get_current_g_val();
+            gr_norm = la::norm(gr);
+            this->gr_norms.push_back(gr_norm);
         }
 
         this->toc();

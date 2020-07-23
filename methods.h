@@ -12,5 +12,13 @@
 #include "methods/quasi_newton/dfp.h"
 #include "methods/quasi_newton/bfgs.h"
 #include "methods/quasi_newton/l_bfgs.h"
+#include "methods/gradient/nesterov.h"
+#include "methods/gradient/adadelta.h"
+#include "methods/gradient/adagrad.h"
+#include "methods/gradient/rmsprop.h"
+#include "methods/gradient/adam.h"
+#include "methods/gradient/adamax.h"
+#include "methods/gradient/nadam.h"
+#include "methods/gradient/amsgrad.h"
 
 #endif //PROJEKATC___METHODS_H

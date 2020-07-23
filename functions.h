@@ -16,5 +16,10 @@
 #include "functions/gen_rosenbrock.h"
 #include "functions/part_pert_quad.h"
 #include "functions/raydan1.h"
+#include "functions/ext_white_and_holst.h"
+#include "functions/ext_beale.h"
+#include "functions/ext_penalty.h"
+#include "functions/hager.h"
+#include "functions/ext_TET.h"
 
 #endif //PROJEKATC___FUNCTIONS_H
