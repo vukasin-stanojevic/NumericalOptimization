@@ -18,16 +18,16 @@ class l_bfgs : public base_method<real> {
 private:
     size_t cache_size;
 public:
-    l_bfgs() : base_method<real>(), cache_size(5) {}
-    l_bfgs(size_t cache_size) : base_method<real>(), cache_size(cache_size) {}
-    l_bfgs(size_t cache_size, real epsilon) : base_method<real>(epsilon), cache_size(cache_size) {}
-    l_bfgs(size_t cache_size, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), cache_size(cache_size) {}
-    l_bfgs(size_t cache_size, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), cache_size(cache_size) {}
+    l_bfgs() : base_method<real>(), cache_size(5) {this->method_name = "Limited memory BFGS";}
+    l_bfgs(size_t cache_size) : base_method<real>(), cache_size(cache_size) {this->method_name = "Limited memory BFGS";}
+    l_bfgs(size_t cache_size, real epsilon) : base_method<real>(epsilon), cache_size(cache_size) {this->method_name = "Limited memory BFGS";}
+    l_bfgs(size_t cache_size, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), cache_size(cache_size) {this->method_name = "Limited memory BFGS";}
+    l_bfgs(size_t cache_size, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), cache_size(cache_size) {this->method_name = "Limited memory BFGS";}
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
         ls.clear_f_vals();
-        
+        this->gr_norms.clear();
         this->tic();
 
         la::vec<real> x0;
@@ -43,8 +43,10 @@ public:
         std::list<la::vec<real>> s_cache, y_cache;
         std::list<real> rho_cache;
 
+        real gr_norm = la::norm(gradient_curr);
+        this->gr_norms.push_back(gr_norm);
 
-        while (la::norm(gradient_curr) > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
+        while (gr_norm > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
             ++this->iter_count;
             ls.push_f_val(fcur);
             ls.set_current_f_val(fcur);
@@ -71,6 +73,9 @@ public:
             this->add_to_cache(rho,rho_cache);
 
             H = (s.dot(y))/(y.dot(y));
+
+            gr_norm = la::norm(gradient_curr);
+            this->gr_norms.push_back(gr_norm);
         }
 
         this->toc();

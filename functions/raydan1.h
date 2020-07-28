@@ -9,20 +9,35 @@ namespace function {
 
 template<class real>
 class raydan1 {
+private:
+    static void calculate_f_job(const la::vec<real>* v, std::promise<real>&& prom, size_t i_start, size_t i_end) {
+        real z = 0.0;
+
+        for (size_t i = i_start; i < i_end; ++i) {
+            z += ((i+1) / 10.0) * (exp((*v)[i]) - (*v)[i]);
+        }
+
+        prom.set_value(z);
+    }
+
+    static void calculate_grad_job(const la::vec<real>* v, la::vec<real>* grad, size_t i_start, size_t i_end) {
+        for (size_t i = i_start; i < i_end; ++i) {
+            (*grad)[i] = ((i+1) / 10.0) * (exp((*v)[i]) - 1);
+        }
+    }
+
+    static void calculate_hessian_job(const la::vec<real>* v, la::mat<real>* hess, size_t i_start, size_t i_end) {
+        for (size_t i = i_start; i < i_end; ++i) {
+            (*hess)[i][i] = ((i+1) / 10.0) * exp((*v)[i]);
+        }
+    }
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() == 0) {
             throw "raydan1: n must be positive";
         }
 
-        size_t n = v.size();
-        real z = 0.0;
-
-        for (size_t i = 0; i < n; ++i) {
-            z += ((i+1) / 10.0) * (exp(v[i]) - v[i]);
-        }
-
-        return z;
+        return function<real>::calculate_value_multithread(&v, raydan1<real>::calculate_f_job);
     }
 
     static la::vec<real> gradient(const la::vec<real>& v) {
@@ -30,13 +45,8 @@ public:
             throw "raydan1: n must be positive";
         }
 
-        size_t n = v.size();
-        la::vec<real> z(n, 0.0);
-
-        for (size_t i = 0; i < n; ++i) {
-            z[i] = ((i+1) / 10.0) * (exp(v[i]) - 1);
-        }
-
+        la::vec<real> z(v.size());
+        function<real>::calculate_gradient_multithread(&v, &z, raydan1<real>::calculate_grad_job);
         return z;
     }
 
@@ -47,10 +57,7 @@ public:
 
         size_t n = v.size();
         la::mat<real> z(n, n, 0.0);
-
-        for (size_t i = 0; i < n; ++i) {
-            z[i][i] = ((i+1) / 10.0) * exp(v[i]);
-        }
+        function<real>::calculate_hessian_multithread(&v, &z, raydan1<real>::calculate_hessian_job);
 
         return z;
     }

@@ -39,6 +39,7 @@ namespace opt {
                     //la::vec<real> tmp(x.size());
                     real t;
                     real gr_norm = la::norm(gr);
+                    this->gr_norms.push_back(gr_norm);
                     while (gr_norm > this->epsilon && this->iter_count < this->max_iter &&
                            fabs(f_prev - f_curr) / (1 + fabs(f_curr)) > this->working_precision) {
                         ++this->iter_count;
@@ -46,9 +47,13 @@ namespace opt {
                         ls.push_f_val(f_curr);
                         ls.set_current_f_val(f_curr);
                         ls.set_current_g_val(gr);
+                        m *= beta_1;
+                        m +=gr * (1 - beta_1);
+                        //m = m * beta_1 + gr * (1 - beta_1);
 
-                        m = m * beta_1 + gr * (1 - beta_1);
-                        v = v * beta_2 + gr * gr * (1 - beta_2);
+                        v *= beta_2;
+                        v += gr * gr * (1 - beta_2);
+                        //v = v * beta_2 + gr * gr * (1 - beta_2);
 
                         compute_p_and_update_v_hat(&m, &v, &v_hat, eps, beta_1, beta_2, &p, this->iter_count);
                         t = ls(f, x, p);
@@ -72,7 +77,7 @@ namespace opt {
             private:
                 static void compute_p_and_update_v_hat(la::vec<real>* m, la::vec<real>* v, la::vec<real>* v_hat, real eps, real beta_1, real beta_2, la::vec<real>* p, int step) {
                     unsigned int processor_count = std::thread::hardware_concurrency();
-                    processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+                    processor_count = processor_count > la::MAX_THREAD_NUM ? la::MAX_THREAD_NUM : processor_count;
                     if (processor_count > 1) {
                         std::vector<std::thread> threads;
                         size_t work_by_thread = m->size() / processor_count;

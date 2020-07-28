@@ -12,10 +12,8 @@
 #include <mutex>
 #include <functional>
 
-#define MAX_THREAD_NUM 100
-
-
 namespace la {
+    int MAX_THREAD_NUM = 1;
 
 template<class T>
 class mat;
@@ -51,7 +49,7 @@ public:
 
     vec() : n(0), a(nullptr) {}
 
-    vec(size_t n) : n(n), a(new T[n]) {}
+    explicit vec(size_t n) : n(n), a(new T[n]) {}
 
     vec(size_t n, const T& val) : n(n), a(new T[n]) {
         for (size_t i=0; i<n; i++)
@@ -62,9 +60,11 @@ public:
         delete[] a;
     }
 
-    vec(const vec& b) : n(b.n), a(new T[n]) {
-        for (size_t i=0; i<n; i++)
-            a[i] = b.a[i];
+    vec(const vec& b) : n(b.n) {
+        a = new T[n];
+        for (int i = 0; i < n; i++) {
+            this->a[i] = b.a[i];
+        }
     }
 
     vec(vec&& b) : n(b.n), a(b.a) {
@@ -82,24 +82,30 @@ public:
         }
     }
 
-    vec& operator= (const vec& b) {
+    vec& operator= (const vec<T>& b) {
         if (&b == this)
             return *this;
 
         delete[] a;
         n = b.n;
         a = new T[n];
-        for (size_t i=0; i<n; i++)
-            a[i] = b.a[i];
+
+        for (int i = 0; i < n; i++) {
+            this->a[i] = b[i];
+        }
+
         return *this;
     }
 
     vec& operator= (vec&& b) {
+
         delete[] a;
         n = b.n;
         a = new T[n];
-        for (size_t i=0; i<n; i++)
-            a[i] = b.a[i];
+
+        for (int i = 0; i < n; i++) {
+            this->a[i] = b[i];
+        }
         b.a = nullptr;
         b.a = 0;
         return *this;
@@ -122,28 +128,36 @@ public:
     T& operator[] (size_t i) { return a[i]; }
     const T& operator[] (size_t i) const { return a[i]; }
 
+    T get_element(size_t index) const {
+        return a[index];
+    }
+
+    void set_element(size_t index, T val) {
+        a[index] = val;
+    }
+
     // Skalarni compound operatori
 
     vec& operator+= (const T& x) {
-        vec::launch_binary_op_multithread<std::plus<T>>(this, x, this);
+        vec::launch_binary_op_multithread<std::plus<T>>(this, (T)x, this);
 
         return *this;
     }
 
     vec& operator-= (const T& x) {
-        vec::launch_binary_op_multithread<std::minus<T>>(this, x, this);
+        vec::launch_binary_op_multithread<std::minus<T>>(this, (T)x, this);
 
         return *this;
     }
 
     vec& operator*= (const T& x) {
-        vec::launch_binary_op_multithread<std::multiplies<T>>(this, x, this);
+        vec::launch_binary_op_multithread<std::multiplies<T>>(this, (T)x, this);
 
         return *this;
     }
 
     vec& operator/= (const T& x) {
-        vec::launch_binary_op_multithread<std::divides<T>>(this, x, this);
+        vec::launch_binary_op_multithread<std::divides<T>>(this, (T)x, this);
 
         return *this;
     }
@@ -205,7 +219,7 @@ public:
 
     // Vektorski obicni pointwise operatori
     vec operator+ (const vec& x) const {
-        vec tmp = *this;
+        vec tmp(*this);
         tmp += x;
         return tmp;
     }
@@ -272,6 +286,7 @@ public:
 
         unsigned int processor_count = std::thread::hardware_concurrency();
         processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+
         if (processor_count > 1) {
             std::vector<std::thread> threads;
             size_t work_by_thread = n / processor_count;
@@ -295,6 +310,7 @@ public:
     static void launch_binary_op_multithread(const vec<T>* left, const vec<T>* right, vec<T>* result) {
         unsigned int processor_count = std::thread::hardware_concurrency();
         processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+
         if (processor_count > 1) {
             std::vector<std::thread> threads;
             size_t work_by_thread = left->n / processor_count;
@@ -318,6 +334,7 @@ public:
     static void launch_binary_op_multithread(const vec<T>* left, const T right, vec<T>* result) {
         unsigned int processor_count = std::thread::hardware_concurrency();
         processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+
         if (processor_count > 1) {
             std::vector<std::thread> threads;
             size_t work_by_thread = left->n / processor_count;
@@ -325,15 +342,15 @@ public:
 
             int k;
             for (k = 0; k < processor_count - 1; k++) {
-                threads.push_back(std::thread(&vec<T>::vec_scalar_binary_op<Func>, left, right, result, Func(),
+                threads.push_back(std::thread(&vec<T>::vec_scalar_binary_op<Func>, left, (T)right, result, Func(),
                                               k * work_by_thread, (k + 1) * work_by_thread));
             }
-            threads.push_back(std::thread(&vec<T>::vec_scalar_binary_op<Func>, left, right, result, Func(), k * work_by_thread,
+            threads.push_back(std::thread(&vec<T>::vec_scalar_binary_op<Func>, left, (T)right, result, Func(), k * work_by_thread,
                                           (k + 1) * work_by_thread + last_thread_additional_work));
 
             for (auto &th : threads) th.join();
         } else {
-            vec<T>::vec_scalar_binary_op(left, right, result, Func(), 0, left->n);
+            vec<T>::vec_scalar_binary_op(left, (T)right, result, Func(), 0, left->n);
         }
     }
 
@@ -469,33 +486,37 @@ public:
     vec_proxy operator[] (size_t i) { return a[i]; }
     const_vec_proxy operator[] (size_t i) const { return a[i]; }
 
+    U get_element(size_t i, size_t j) const {
+        return a[i][j];
+    }
+
+    void set_element(size_t i, size_t j, U val) {
+        a[i][j] = val;
+    }
+
     // Skalarni compound operatori
 
     mat& operator+= (const U& x) {
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                a[i][j] += x;
+        mat_launch_binary_op_multithread<std::plus<U>>(this, x, this);
+
         return *this;
     }
 
     mat& operator-= (const U& x) {
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                a[i][j] -= x;
+        mat_launch_binary_op_multithread<std::minus<U>>(this, x, this);
+
         return *this;
     }
 
     mat& operator*= (const U& x) {
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                a[i][j] *= x;
+        mat_launch_binary_op_multithread<std::multiplies<U>>(this, x, this);
+
         return *this;
     }
 
     mat& operator/= (const U& x) {
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                a[i][j] /= x;
+        mat_launch_binary_op_multithread<std::divides<U>>(this, x, this);
+
         return *this;
     }
 
@@ -528,33 +549,29 @@ public:
     // Matricni pointwise compound operatori
     mat& operator+= (const mat& x) {
         check_dims(x);
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                a[i][j] += x.a[i][j];
+        mat_launch_binary_op_multithread<std::plus<U>>(this, &x, this);
+
         return *this;
     }
 
     mat& operator-= (const mat& x) {
         check_dims(x);
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                a[i][j] -= x.a[i][j];
+        mat_launch_binary_op_multithread<std::minus<U>>(this, &x, this);
+
         return *this;
     }
 
     mat& operator*= (const mat& x) {
         check_dims(x);
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                a[i][j] *= x.a[i][j];
+        mat_launch_binary_op_multithread<std::multiplies<U>>(this, &x, this);
+
         return *this;
     }
 
     mat& operator/= (const mat& x) {
         check_dims(x);
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                a[i][j] /= x.a[i][j];
+        mat_launch_binary_op_multithread<std::divides<U>>(this, &x, this);
+
         return *this;
     }
 
@@ -648,10 +665,7 @@ public:
             return mat();
 
         mat tmp(cols(), rows());
-
-        for (size_t i=0; i<rows(); i++)
-            for (size_t j=0; j<cols(); j++)
-                tmp[j][i] = a[i][j];
+        mat_launch_binary_op_multithread<std::multiplies<U>>(this, 1, &tmp);
 
         return tmp;
     }
@@ -693,6 +707,68 @@ private:
         }
     }
 
+    template<class Func>
+    static void mat_launch_binary_op_multithread(const mat<U>* left, const mat<U>* right, mat<U>* result) {
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+            size_t work_by_thread = left->rows() / processor_count;
+            int last_thread_additional_work = left->rows() - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(&mat<U>::elementwise_binary_op<Func>, left, right, result, Func(),
+                                              k * work_by_thread, (k + 1) * work_by_thread));
+            }
+            threads.push_back(std::thread(&mat<U>::elementwise_binary_op<Func>, left, right, result, Func(), k * work_by_thread,
+                                          (k + 1) * work_by_thread + last_thread_additional_work));
+
+            for (auto &th : threads) th.join();
+        } else {
+            mat<U>::elementwise_binary_op(left, right, result, Func(), 0, left->rows());
+        }
+    }
+
+    template<class Func>
+    static void mat_launch_binary_op_multithread(const mat<U>* left, const U right, mat<U>* result) {
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+            size_t work_by_thread = left->rows() / processor_count;
+            int last_thread_additional_work = left->rows() - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(&mat<U>::vec_scalar_binary_op<Func>, left, right, result, Func(),
+                                              k * work_by_thread, (k + 1) * work_by_thread));
+            }
+            threads.push_back(std::thread(&mat<U>::vec_scalar_binary_op<Func>, left, right, result, Func(), k * work_by_thread,
+                                          (k + 1) * work_by_thread + last_thread_additional_work));
+
+            for (auto &th : threads) th.join();
+        } else {
+            mat<U>::vec_scalar_binary_op(left, right, result, Func(), 0, left->rows());
+        }
+    }
+
+private:
+    template<class Func>
+    static void elementwise_binary_op(const mat<U>* left, const mat<U>* right, mat<U>* result, Func op, int i_start, int i_end) {
+        for (int i = i_start; i < i_end; ++i) {
+            for (int j = 0; j < result->cols(); j++)
+                (*result)[i][j] = op((*left)[i][j], (*right)[i][j]);
+        }
+    }
+    template<class Func>
+    static void vec_scalar_binary_op(const mat<U>* left, const U right, mat<U>* result, Func op, int i_start, int i_end) {
+        for (int i = i_start; i < i_end; ++i) {
+            for (int j = 0; j < result->cols(); j++)
+                (*result)[i][j] = op((*left)[i][j], right);
+        }
+    }
 };
 
 template<class T>

@@ -10,10 +10,10 @@ namespace quasi_newton {
 template<class real>
 class bfgs : public base_method<real> {
 public:
-    bfgs() : base_method<real>() {}
-    bfgs(real epsilon) : base_method<real>(epsilon) {}
-    bfgs(real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter) {}
-    bfgs(real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision) {}
+    bfgs() : base_method<real>() {this->method_name = "BFGS method";}
+    bfgs(real epsilon) : base_method<real>(epsilon) {this->method_name = "BFGS method";}
+    bfgs(real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter) {this->method_name = "BFGS method";}
+    bfgs(real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision) {this->method_name = "BFGS method";}
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
@@ -32,8 +32,10 @@ public:
 
         real fcur = f(x1);
         real fprev = fcur + 1;
+        real gr_norm = la::norm(gr1);
+        this->gr_norms.push_back(gr_norm);
 
-        while (la::norm(gr1) > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
+        while (gr_norm > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
             ++this->iter_count;
             ls.push_f_val(fcur);
             ls.set_current_f_val(fcur);
@@ -58,6 +60,8 @@ public:
             la::vec<real> H_dot_y = H.dot(y);
 
             H +=  s.outer(s)*(auxSc + y.dot(H_dot_y))/(auxSc*auxSc) - (H_dot_y.outer(s) + (s.outer(H_dot_y)))/auxSc;
+            gr_norm = la::norm(gr1);
+            this->gr_norms.push_back(gr_norm);
         }
 
         this->toc();

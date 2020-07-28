@@ -34,7 +34,7 @@ namespace opt {
                     la::vec<real> m(gr.size(), 0);
                     la::vec<real> v(gr.size(), 0);
                     la::vec<real> p(x.size());
-                    //la::vec<real> tmp(x.size());
+
                     real t;
                     real gr_norm = la::norm(gr);
                     this->gr_norms.push_back(gr_norm);
@@ -47,8 +47,11 @@ namespace opt {
                         ls.set_current_f_val(f_curr);
                         ls.set_current_g_val(gr);
 
-                        m = m * beta_1 + gr * (1 - beta_1);
-                        v = v * beta_2 + gr * gr * (1 - beta_2);
+                        m *= beta_1;
+                        m += gr * (1 - beta_1);
+
+                        v *= beta_2;
+                        v += gr * gr * (1 - beta_2);
 
                         compute_p(&m, &v, eps, beta_1, beta_2, &p, this->iter_count);
                         t = ls(f, x, p);
@@ -72,7 +75,7 @@ namespace opt {
             private:
                 static void compute_p(la::vec<real>* m, la::vec<real>* v, real eps, real beta_1, real beta_2, la::vec<real>* p, int step) {
                     unsigned int processor_count = std::thread::hardware_concurrency();
-                    processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+                    processor_count = processor_count > la::MAX_THREAD_NUM ? la::MAX_THREAD_NUM : processor_count;
                     if (processor_count > 1) {
                         std::vector<std::thread> threads;
                         size_t work_by_thread = m->size() / processor_count;

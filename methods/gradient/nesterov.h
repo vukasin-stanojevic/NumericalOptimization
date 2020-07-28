@@ -15,7 +15,9 @@ namespace opt {
             private:
                 real gamma = (real)0.9;
             public:
-                explicit nesterov(real _gamma = 0.9): base_method<real>(), gamma(_gamma){}
+                explicit nesterov(real _gamma = 0.9): base_method<real>(), gamma(_gamma){
+                    this->method_name = "Nesterov momentum";
+                }
                 void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
                     this->iter_count = 0;
                     ls.clear_f_vals();

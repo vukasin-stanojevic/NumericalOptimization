@@ -16,7 +16,9 @@ namespace opt {
                 real beta_2;
                 real eps = (real)10e-8;
             public:
-                explicit nadam(real beta_1 = 0.9, real beta_2 = 0.999, real eps = 10e-8): base_method<real>(), beta_1(beta_1), beta_2(beta_2), eps(eps) {}
+                explicit nadam(real beta_1 = 0.9, real beta_2 = 0.999, real eps = 10e-8): base_method<real>(), beta_1(beta_1), beta_2(beta_2), eps(eps) {
+                    this->method_name = "Nadam";
+                }
                 void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
                     this->iter_count = 0;
                     ls.clear_f_vals();
@@ -42,8 +44,11 @@ namespace opt {
                         ls.set_current_f_val(f_curr);
                         ls.set_current_g_val(gr);
 
-                        m = m * beta_1 + gr * (1 - beta_1);
-                        v = v * beta_2 + gr * gr * (1 - beta_2);
+                        m *= beta_1;
+                        m +=  gr * (1 - beta_1);
+
+                        v *= beta_2;
+                        v += gr * gr * (1 - beta_2);
 
                         compute_p(&m, &v, &gr, eps, beta_1, beta_2, &p, this->iter_count);
                         t = ls(f, x, p);
@@ -67,7 +72,7 @@ namespace opt {
             private:
                 static void compute_p(la::vec<real>* m, la::vec<real>* v, la::vec<real>* grad, real eps, real beta_1, real beta_2, la::vec<real>* p, int step) {
                     unsigned int processor_count = std::thread::hardware_concurrency();
-                    processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+                    processor_count = processor_count > la::MAX_THREAD_NUM ? la::MAX_THREAD_NUM : processor_count;
                     if (processor_count > 1) {
                         std::vector<std::thread> threads;
                         size_t work_by_thread = m->size() / processor_count;

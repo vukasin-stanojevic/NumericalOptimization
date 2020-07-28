@@ -8,19 +8,40 @@ namespace function {
 
 template<class real>
 class almost_pert_quad {
+private:
+    static void calculate_f_job(const la::vec<real>* v, std::promise<real>&& prom, size_t i_start, size_t i_end) {
+        real z = 0;
+        real t;
+        for (size_t i=i_start; i<i_end; ++i) {
+            t = (i+1)*(*v)[i]*(*v)[i];
+            z += t;
+        }
+        prom.set_value(z);
+    }
+
+    static void calculate_grad_job(const la::vec<real>* v, la::vec<real>* grad, size_t i_start, size_t i_end) {
+
+        for (size_t i=i_start; i<i_end; ++i) {
+            (*grad)[i] = 2*(i+1)*(*v)[i];
+        }
+    }
+
+    static void calculate_hessian_job(const la::vec<real>* v, la::mat<real>* hess, size_t i_start, size_t i_end) {
+
+        for (size_t i=i_start; i<i_end; ++i) {
+            (*hess)[i][i] = 2*(i+1);
+        }
+    }
 public:
     static const int c = 100;
 
     static real func(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "almost_pert_quad: n must be positive";
-        real z = 0;
+        real z = function<real>::calculate_value_multithread(&v, almost_pert_quad<real>::calculate_f_job);
         size_t n = v.size();
-        for (size_t i=0; i<n; ++i) {
-            real t = (i+1)*v[i]*v[i];
-            z += t;
-        }
         z+=n*(v[0]+v[n-1])*(v[0]+v[n-1])/c;
+
         return z;
     }
 
@@ -28,16 +49,16 @@ public:
         if (v.size() == 0)
             throw "almost_pert_quad: n must be positive";
         size_t n = v.size();
-        la::vec<real> z(n, 0.0);
+        la::vec<real> grad(n);
+
+        function<real>::calculate_gradient_multithread(&v, &grad, almost_pert_quad<real>::calculate_grad_job);
 
         real t = (2.0/c)*(v[0]+v[n-1]);
 
-        for (size_t i=0; i<n; ++i) {
-            z[i] = 2*(i+1)*v[i];
-        }
-        z[0]+= n*t;
-        z[n-1]+= n*t;
-        return z;
+        grad[0]+= n*t;
+        grad[n-1]+= n*t;
+
+        return grad;
     }
 
     static la::mat<real> hessian(const la::vec<real>& v) {
@@ -45,9 +66,9 @@ public:
             throw "almost_pert_quad: n must be positive";
         la::mat<real> z(v.size(), v.size(), 0.0);
         size_t n = v.size();
-        for (size_t i=0; i<n; ++i) {
-            z[i][i] = 2*(i+1);
-        }
+
+        function<real>::calculate_hessian_multithread(&v, &z, almost_pert_quad<real>::calculate_hessian_job);
+
         z[n-1][n-1] += (2.0*n)/c;
         z[0][0] += (2.0*n)/c;
         z[n-1][0] += (2.0*n)/c;

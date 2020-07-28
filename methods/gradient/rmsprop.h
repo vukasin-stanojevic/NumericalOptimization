@@ -15,7 +15,9 @@ namespace opt {
                 real gamma = (real)0.9;
                 real eps = (real)10e-8;
             public:
-                explicit rms_prop(real _gamma = 0.9, real eps = 10e-8): base_method<real>(), gamma(_gamma), eps(eps) {}
+                explicit rms_prop(real _gamma = 0.9, real eps = 10e-8): base_method<real>(), gamma(_gamma), eps(eps) {
+                    this->method_name = "RMSprop";
+                }
                 void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
                     this->iter_count = 0;
                     ls.clear_f_vals();
@@ -41,7 +43,8 @@ namespace opt {
                         if (this->iter_count == 0) {
                             gr_sq = gr * gr;
                         } else {
-                            gr_sq = gr_sq * gamma + gr * gr * (1 - gamma);
+                            gr_sq *= gamma;
+                            gr_sq +=  gr * gr * (1 - gamma);
                         }
 
 //                        la::vec<real>::template launch_binary_op_multithread<opt::function::reciprocal_of_sqrt_of_sum<real>>(
@@ -71,7 +74,7 @@ namespace opt {
             private:
                 static void compute_p(la::vec<real>* sq_grads, la::vec<real>* grad, real eps, la::vec<real>* p) {
                     unsigned int processor_count = std::thread::hardware_concurrency();
-                    processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+                    processor_count = processor_count > la::MAX_THREAD_NUM ? la::MAX_THREAD_NUM : processor_count;
                     if (processor_count > 1) {
                         std::vector<std::thread> threads;
                         size_t work_by_thread = grad->size() / processor_count;

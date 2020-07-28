@@ -38,9 +38,12 @@ namespace opt {
                     this->gr_norms.push_back(gr_norm);
 
                     while (gr_norm > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
-                        gr_sq = gr_sq * gamma + gr * gr * (1 - gamma);
+                        gr_sq *= gamma;
+                        gr_sq += gr * gr * (1 - gamma);
+
                         compute_p(&gr_sq, &update_sq, &gr, eps, &p);
-                        update_sq = update_sq * gamma + p * p * (1 - gamma);
+                        update_sq *= gamma;
+                        update_sq += p * p * (1 - gamma);
 
                         x += p;
 
@@ -64,7 +67,7 @@ namespace opt {
             private:
                 static void compute_p(la::vec<real>* sq_grads, la::vec<real>* sq_updates, la::vec<real>* grad, real eps, la::vec<real>* p) {
                     unsigned int processor_count = std::thread::hardware_concurrency();
-                    processor_count = processor_count > MAX_THREAD_NUM ? MAX_THREAD_NUM : processor_count;
+                    processor_count = processor_count > la::MAX_THREAD_NUM ? la::MAX_THREAD_NUM : processor_count;
                     if (processor_count > 1) {
                         std::vector<std::thread> threads;
                         size_t work_by_thread = grad->size() / processor_count;

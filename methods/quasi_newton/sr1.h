@@ -10,16 +10,17 @@ namespace quasi_newton {
 template<class real>
 class sr1 : public base_method<real> {
 public:
-    sr1() : base_method<real>(), r(1e-8) {}
-    sr1(real r) : base_method<real>(), r(r) {}
-    sr1(real r, real epsilon) : base_method<real>(epsilon), r(r) {}
-    sr1(real r, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), r(r) {}
-    sr1(real r, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), r(r) {}
+    sr1() : base_method<real>(), r(1e-8) {this->method_name = "Symmetric rank-one method";}
+    sr1(real r) : base_method<real>(), r(r) {this->method_name = "Symmetric rank-one method";}
+    sr1(real r, real epsilon) : base_method<real>(epsilon), r(r) {this->method_name = "Symmetric rank-one method";}
+    sr1(real r, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), r(r) {this->method_name = "Symmetric rank-one method";}
+    sr1(real r, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), r(r) {this->method_name = "Symmetric rank-one method";}
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
         ls.clear_f_vals();
-        
+        this->gr_norms.clear();
+
         this->tic();
 
         size_t n = x.size();
@@ -33,8 +34,10 @@ public:
 
         real fcur = f(x1);
         real fprev = fcur + 1;
+        real gr_norm = la::norm(gragient_curr);
+        this->gr_norms.push_back(gr_norm);
 
-        while (la::norm(gragient_curr) > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
+        while (gr_norm > this->epsilon && this->iter_count < this->max_iter && fabs(fprev-fcur)/(1+fabs(fcur)) > this->working_precision) {
             ++this->iter_count;
             ls.push_f_val(fcur);
             ls.set_current_f_val(fcur);
@@ -60,7 +63,8 @@ public:
             if (tmp_s_H_dot_y.dot(y) >= r * la::norm(y) * la::norm(tmp_s_H_dot_y) ) {
                 H += (tmp_s_H_dot_y.outer(tmp_s_H_dot_y))/(tmp_s_H_dot_y.outer(y));
             }
-
+            gr_norm = la::norm(gragient_curr);
+            this->gr_norms.push_back(gr_norm);
         }
 
         this->toc();

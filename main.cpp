@@ -5,6 +5,7 @@
 #include "line_searches.h"
 #include "methods.h"
 #include "matplotlibcpp.h"
+#include "test_multithread.h"
 
 using namespace std;
 using namespace opt;
@@ -16,7 +17,9 @@ int main() {
 	
     const int n = 10000;
 
-    // typedef function::ext_rosenbrock<double> func;
+    // typedef opt::function::ext_rosenbrock<double> func;
+    // typedef opt::function::gen_psc1<double> func;
+    // typedef opt::function::explin1<double> func;
     // typedef opt::function::ext_himmelblau<double> func;
     // typedef opt::function::gen_rosenbrock<double> func;
     // typedef opt::function::raydan1<double> func;
@@ -27,13 +30,12 @@ int main() {
     // typedef opt::function::ext_quad_pen_qp1<double> func;
     // typedef opt::function::almost_pert_quad<double> func;
     // typedef opt::function::diagonal1<double> func;
-    // typedef opt::function::gen_psc1<double> func;
     // typedef opt::function::fletchcr<double> func;
     // typedef opt::function::ext_white_and_holst<double> func;
     // typedef opt::function::ext_beale<double> func;
     // typedef opt::function::ext_penalty<double> func;
     // typedef opt::function::hager_function<double> func;
-    typedef opt::function::ext_TET<double> func;
+     typedef opt::function::ext_TET<double> func;
 
     // method::gradient::gradient_descent<double> opt;
     // method::gradient::momentum<double> opt;
@@ -50,7 +52,7 @@ int main() {
     // method::gradient::adagrad<double> opt;
     // method::gradient::adadelta<double> opt;
     // method::gradient::rms_prop<double> opt;
-    //  method::gradient::adam<double> opt;
+    // method::gradient::adam<double> opt;
     // method::gradient::adamax<double> opt;
     // method::gradient::nadam<double> opt;
      method::gradient::amsgrad<double> opt;
@@ -58,11 +60,11 @@ int main() {
     map<string, double> params;
     // line_search::binary<double> ls(params);
      //line_search::fixed_step_size<double> ls(params);
-    // line_search::armijo<double> ls(params);
+     line_search::armijo<double> ls(params);
     // line_search::goldstein<double> ls(params);
-    //line_search::wolfe<double> ls(params);
-    //line_search::strong_wolfe<double> ls(params);
-     line_search::approx_wolfe<double> ls(params);
+    // line_search::wolfe<double> ls(params);
+    // line_search::strong_wolfe<double> ls(params);
+    // line_search::approx_wolfe<double> ls(params);
 
     opt::function::function<double> f = func::getFunction();
     la::vec<double> x = f.starting_point(n);
@@ -79,7 +81,7 @@ int main() {
         cout << e.first << ": " << e.second << "\n";
     }
 
-    opt(f, ls, x);
+   opt(f, ls, x);
 
     cout << "xMin: " << x << "\n";
     cout << "fMin: " << opt.get_f_min() << "\n";
@@ -95,6 +97,8 @@ int main() {
     s += "method: " + opt.get_method_name();
     plt::title(s);
     plt::show();
+    
+    // test(&opt, f, ls);
 
     return 0;
 }

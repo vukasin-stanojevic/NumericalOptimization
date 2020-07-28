@@ -8,6 +8,41 @@ namespace function {
 
 template<class real>
 class ext_rosenbrock {
+private:
+    static void calculate_f_job(const la::vec<real>* v, std::promise<real>&& prom, size_t i_start, size_t i_end) {
+        real z = 0.0;
+
+        for (size_t i = i_start; i < i_end; i += 2) {
+            real t = (*v)[i+1] - (*v)[i]*(*v)[i];
+            z += c * t*t;
+            t = 1 - (*v)[i];
+            z += t*t;
+        }
+
+        prom.set_value(z);
+    }
+
+    static void calculate_grad_job(const la::vec<real>* v, la::vec<real>* grad, size_t i_start, size_t i_end) {
+        for (size_t i = i_start; i < i_end; i++) {
+            // i & 1 != 0 <=> i is odd
+            (*grad)[i] = i & 1 ? c * (2*(*v)[i] - 2*(*v)[i-1]*(*v)[i-1])
+                         : c * (4*(*v)[i]*(*v)[i]*(*v)[i] - 4*(*v)[i+1]*(*v)[i]) + 2*(*v)[i] - 2;
+        }
+    }
+
+    static void calculate_hessian_job(const la::vec<real>* v, la::mat<real>* hess, size_t i_start, size_t i_end) {
+
+        for (size_t i = i_start; i < i_end; i++) {
+            // i & 1 != 0 <=> i is odd
+            if (i & 1) {
+                (*hess)[i][i-1] = -4*c*(*v)[i-1];
+                (*hess)[i][i] = 2*c;
+            } else {
+                (*hess)[i][i] = 12*c*(*v)[i]*(*v)[i] - 4*c*(*v)[i+1] + 2;
+                (*hess)[i][i+1] = -4*c*(*v)[i];
+            }
+        }
+    }
 public:
     static const int c = 100;
 
@@ -16,17 +51,7 @@ public:
             throw "ext_rosenbrock: n must be even and positive";
         }
 
-        size_t n = v.size();
-        real z = 0.0;
-
-        for (size_t i = 0; i < n; i += 2) {
-            real t = v[i+1] - v[i]*v[i];
-            z += c * t*t;
-            t = 1 - v[i];
-            z += t*t;
-        }
-
-        return z;
+        return function<real>::calculate_value_multithread(&v, ext_rosenbrock<real>::calculate_f_job);
     }
 
     static la::vec<real> gradient(const la::vec<real>& v) {
@@ -35,15 +60,11 @@ public:
         }
 
         size_t n = v.size();
-        la::vec<real> z(n, 0.0);
+        la::vec<real> grad(n);
 
-        for (size_t i = 0; i < n; i++) {
-            // i & 1 != 0 <=> i is odd
-            z[i] = i & 1 ? c * (2*v[i] - 2*v[i-1]*v[i-1])
-                         : c * (4*v[i]*v[i]*v[i] - 4*v[i+1]*v[i]) + 2*v[i] - 2;
-        }
+        function<real>::calculate_gradient_multithread(&v, &grad, ext_rosenbrock<real>::calculate_grad_job);
 
-        return z;
+        return grad;
     }
 
     static la::mat<real> hessian(const la::vec<real>& v) {
@@ -52,20 +73,11 @@ public:
         }
 
         size_t n = v.size();
-        la::mat<real> z(n, n, 0.0);
+        la::mat<real> hes(n, n, 0.0);
 
-        for (size_t i = 0; i < n; i++) {
-            // i & 1 != 0 <=> i is odd
-            if (i & 1) {
-                z[i][i-1] = -4*c*v[i-1];
-                z[i][i] = 2*c;
-            } else {
-                z[i][i] = 12*c*v[i]*v[i] - 4*c*v[i+1] + 2;
-                z[i][i+1] = -4*c*v[i];
-            }
-        }
+        function<real>::calculate_hessian_multithread(&v, &hes, ext_rosenbrock<real>::calculate_hessian_job);
 
-        return z;
+        return hes;
     }
 
     static la::vec<real> starting_point(const size_t n) {

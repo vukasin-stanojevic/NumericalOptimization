@@ -8,28 +8,68 @@ namespace function {
 
 template<class real>
 class explin1 {
+private:
+    static void calculate_f_job(const la::vec<real>* v, std::promise<real>&& prom, size_t i_start, size_t i_end) {
+        real z = 0.0;
+        size_t i_end_2 = i_end == v->size()? i_end - 1 : i_end;
+
+        for (size_t i=i_start; i<i_end_2; i++)
+            z += exp(0.1 * (*v)[i] * (*v)[i+1]);
+        for (size_t i=i_start; i<i_end; i++)
+            z -= (*v)[i] * 10 * (i+1);
+
+        prom.set_value(z);
+    }
+
+    static void calculate_grad_job(const la::vec<real>* v, la::vec<real>* grad, size_t i_start, size_t i_end) {
+        size_t i_end_2 = i_end == v->size()? i_end - 1 : i_end;
+
+        for (size_t i=i_start; i<i_end_2; i++) {
+            (*grad)[i] += exp((*v)[i]*(*v)[i+1] / 10) * (*v)[i+1] / 10;
+            (*grad)[i+1] += exp((*v)[i]*(*v)[i+1] / 10) * (*v)[i] / 10;
+        }
+        for (size_t i=i_start; i<i_end; i++)
+            (*grad)[i] -= (real)10*(i+1);
+    }
+
+    static void calculate_hessian_job(const la::vec<real>* v, la::mat<real>* hess, size_t i_start, size_t i_end) {
+        size_t i_end_2 = i_end == v->size()? i_end - 1 : i_end;
+        real a;
+        real b;
+        real c;
+
+        for (size_t i=i_start; i<i_end; i++) {
+            b = (*v)[i];
+            if (i > 0) {
+                a = (*v)[i-1];
+                (*hess)[i][i] += a*a*exp(0.1*a*b);
+            }
+            if (i+1 < v->size()) {
+                c = (*v)[i+1];
+                (*hess)[i][i] += c*c*exp(0.1*b*c);
+            }
+        }
+
+        for (size_t i=i_start; i<i_end_2; i++) {
+            a = (*v)[i];
+            b = (*v)[i+1];
+            (*hess)[i][i+1] = (10+a*b)*exp(0.1*a*b);
+            (*hess)[i+1][i] = (*hess)[i][i+1];
+        }
+    }
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "explin1: n must be positive";
-        real z = 0;
-        for (size_t i=0; i<v.size()-1; i++)
-            z += exp(0.1 * v[i] * v[i+1]);
-        for (size_t i=0; i<v.size(); i++)
-            z -= v[i] * 10 * (i+1);
-        return z;
+        return function<real>::calculate_value_multithread(&v, explin1<real>::calculate_f_job);
     }
 
     static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "explin1: n must be positive";
         la::vec<real> z(v.size(), 0.0);
-        for (size_t i=0; i<v.size()-1; i++) {
-            z[i] += exp(v[i]*v[i+1] / 10) * v[i+1] / 10;
-            z[i+1] += exp(v[i]*v[i+1] / 10) * v[i] / 10;
-        }
-        for (size_t i=0; i<v.size(); i++)
-            z[i] -= (real)10*(i+1);
+        function<real>::calculate_gradient_multithread(&v, &z, explin1<real>::calculate_grad_job);
+
         return z;
     }
 
@@ -37,24 +77,8 @@ public:
         if (v.size() == 0)
             throw "explin1: n must be positive";
         la::mat<real> z(v.size(), v.size(), 0.0);
-        for (size_t i=0; i<v.size(); i++) {
-            real b = v[i];
-            if (i > 0) {
-                real a = v[i-1];
-                z[i][i] += a*a*exp(0.1*a*b);
-            }
-            if (i+1 < v.size()) {
-                real c = v[i+1];
-                z[i][i] += c*c*exp(0.1*b*c);
-            }
-        }
 
-        for (size_t i=0; i<v.size()-1; i++) {
-            real a = v[i];
-            real b = v[i+1];
-            z[i][i+1] = (10+a*b)*exp(0.1*a*b);
-            z[i+1][i] = z[i][i+1];
-        }
+        function<real>::calculate_hessian_multithread(&v, &z, explin1<real>::calculate_hessian_job);
 
         return z / (real)100;
     }

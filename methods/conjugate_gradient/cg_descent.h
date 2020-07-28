@@ -20,6 +20,7 @@ public:
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
         ls.clear_f_vals();
+        this->gr_norms.clear();
 
         this->tic();
 
@@ -34,7 +35,10 @@ public:
         real q = 0.0;
         real c = 0.0;
 
-        while (la::norm(gr) > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
+        real gr_norm = la::norm(gr);
+        this->gr_norms.push_back(gr_norm);
+
+        while (gr_norm > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
             ++this->iter_count;
 
             f_prev = f_curr;
@@ -63,6 +67,8 @@ public:
 
             pk *= beta_cgd;
             pk -= gr;
+            gr_norm = la::norm(gr);
+            this->gr_norms.push_back(gr_norm);
         }
 
         this->toc();

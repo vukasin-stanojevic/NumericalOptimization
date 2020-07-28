@@ -2,6 +2,7 @@
 #define PROJEKATC___FUNCTION_H
 
 #include "../utilities/linear_algebra.h"
+#include <future>
 
 namespace opt {
 namespace function {
@@ -18,11 +19,16 @@ struct sqrt_of_sum {
 
 template<class real>
 class function {
+
 public:
 	using func = real(*)(const la::vec<real>&);
 	using grad = la::vec<real>(*)(const la::vec<real>&);
 	using hess = la::mat<real>(*)(const la::vec<real>&);
 	using start = la::vec<real>(*)(const size_t);
+
+    using func_calc_job = void(*)(const la::vec<real>*, std::promise<real>&&, const size_t , const size_t);
+    using grad_calc_job = void(*)(const la::vec<real>*, la::vec<real>*, const size_t, const size_t);
+    using hess_calc_job = void(*)(const la::vec<real>*, la::mat<real>*, const size_t, const size_t);
 
 	function(func f, grad g, hess h, start s) : f(f), g(g), h(h), s(s), call_count(0), grad_count(0), hess_count(0) {}
 
@@ -55,6 +61,97 @@ public:
 
 	size_t get_hess_count() const {
 		return hess_count;
+	}
+
+    static void calculate_hessian_multithread(const la::vec<real>* x, la::mat<real>* hess, hess_calc_job h) {
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > la::MAX_THREAD_NUM ? la::MAX_THREAD_NUM : processor_count;
+        if (processor_count % 2 == 1) {
+            processor_count--;
+        }
+
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+
+            size_t work_by_thread = hess->rows() / processor_count;
+            int last_thread_additional_work = hess->rows() - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(h, x, hess, k*work_by_thread, (k+1)*work_by_thread));
+            }
+            threads.push_back(std::thread(h, x, hess, k*work_by_thread, (k+1)*work_by_thread + last_thread_additional_work));
+
+            for (int i = 0; i < threads.size(); ++i) {
+                threads[i].join();
+            }
+        } else {
+            h(x, hess, 0, hess->rows());
+        }
+    }
+
+	static void calculate_gradient_multithread(const la::vec<real>* x, la::vec<real>* grad, grad_calc_job g) {
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > la::MAX_THREAD_NUM ? la::MAX_THREAD_NUM : processor_count;
+        if (processor_count % 2 == 1) {
+            processor_count--;
+        }
+
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+
+            size_t work_by_thread = x->size() / processor_count;
+            int last_thread_additional_work = x->size() - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                threads.push_back(std::thread(g, x, grad, k*work_by_thread, (k+1)*work_by_thread));
+            }
+            threads.push_back(std::thread(g, x, grad, k*work_by_thread, (k+1)*work_by_thread + last_thread_additional_work));
+
+            for (int i = 0; i < threads.size(); ++i) {
+                threads[i].join();
+            }
+        } else {
+            g(x, grad, 0, x->size());
+        }
+	}
+
+	static real calculate_value_multithread(const la::vec<real>* x, func_calc_job f) {
+        unsigned int processor_count = std::thread::hardware_concurrency();
+        processor_count = processor_count > la::MAX_THREAD_NUM ? la::MAX_THREAD_NUM : processor_count;
+        real val = 0;
+
+        if (processor_count > 1) {
+            std::vector<std::thread> threads;
+            std::vector<std::future<real>> futures;
+
+            size_t work_by_thread = x->size() / processor_count;
+            int last_thread_additional_work = x->size() - work_by_thread * processor_count;
+
+            int k;
+            for (k = 0; k < processor_count - 1; k++) {
+                std::promise<real> p;
+                std::future<real> fut = p.get_future();
+                futures.push_back(std::move(fut));
+                threads.push_back(std::thread(f, x, std::move(p), k*work_by_thread, (k+1)*work_by_thread));
+            }
+            std::promise<real> p;
+            std::future<real> fut = p.get_future();
+            futures.push_back(std::move(fut));
+            threads.push_back(std::thread(f, x, std::move(p), k*work_by_thread, (k+1)*work_by_thread + last_thread_additional_work));
+
+            for (int i = 0; i < futures.size(); ++i) {
+                threads[i].join();
+                val += futures[i].get();
+            }
+        } else {
+            std::promise<real> p;
+            std::future<real> fut = p.get_future();
+            f(x, std::move(p), 0, x->size());
+            val = fut.get();
+        }
+        return val;
 	}
 protected:
 	func f;

@@ -12,20 +12,33 @@ namespace opt {
 
         template<class real>
         class hager_function {
+        private:
+            static void calculate_f_job(const la::vec<real>* v, std::promise<real>&& prom, size_t i_start, size_t i_end) {
+                real z = 0.0;
+                for (size_t i = i_start; i < i_end; i++) {
+                    z += exp((*v)[i]) - sqrt(i+1)*(*v)[i];
+                }
+
+                prom.set_value(z);
+            }
+
+            static void calculate_grad_job(const la::vec<real>* v, la::vec<real>* grad, size_t i_start, size_t i_end) {
+                for (size_t i = i_start; i < i_end; i++) {
+                    (*grad)[i] = exp((*v)[i]) - sqrt(i+1);
+                }
+            }
+
+            static void calculate_hessian_job(const la::vec<real>* v, la::mat<real>* hess, size_t i_start, size_t i_end) {
+                for (size_t i = i_start; i < i_end; i++) {
+                    (*hess)[i][i] = exp((*v)[i]);
+                }
+            }
         public:
             static real func(const la::vec<real>& v) {
                 if (v.size() == 0) {
                     throw "hager_function: n must be even and positive";
                 }
-
-                size_t n = v.size();
-                real z = 0.0;
-
-                for (size_t i = 0; i < n; i++) {
-                    z += exp(v[i]) - sqrt(i+1)*v[i];
-                }
-
-                return z;
+                return function<real>::calculate_value_multithread(&v, hager_function<real>::calculate_f_job);
             }
 
             static la::vec<real> gradient(const la::vec<real>& v) {
@@ -36,12 +49,7 @@ namespace opt {
                 size_t n = v.size();
                 la::vec<real> grad(n);
 
-                real s = 0;
-                real tmp2;
-
-                for (size_t i = 0; i < n; i++) {
-                    grad[i] = exp(v[i]) - sqrt(i+1);
-                }
+                function<real>::calculate_gradient_multithread(&v, &grad, hager_function<real>::calculate_grad_job);
 
                 return grad;
             }
@@ -52,11 +60,9 @@ namespace opt {
                 }
 
                 size_t n = v.size();
-                la::mat<real> hes(n, n, 0);
+                la::mat<real> hes(n, n, 0.0);
 
-                for (size_t i = 0; i < n; i++) {
-                    hes[i][i] = exp(v[i]);
-                }
+                function<real>::calculate_hessian_multithread(&v, &hes, hager_function<real>::calculate_hessian_job);
 
                 return hes;
             }

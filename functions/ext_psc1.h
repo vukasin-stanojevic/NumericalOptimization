@@ -8,34 +8,68 @@ namespace function {
 
 template<class real>
 class ext_psc1 {
+private:
+    static void calculate_f_job(const la::vec<real>* v, std::promise<real>&& prom, size_t i_start, size_t i_end) {
+        real z = 0.0;
+        real t;
+        for (size_t i=i_start; i<i_end; i+=2) {
+            t = (*v)[i]*(*v)[i] + (*v)[i+1]*(*v)[i+1] + (*v)[i]*(*v)[i+1];
+            z += t*t;
+            t = sin((*v)[i]);
+            z += t*t;
+            t = cos((*v)[i+1]);
+            z += t*t;
+        }
+
+        prom.set_value(z);
+    }
+
+    static void calculate_grad_job(const la::vec<real>* v, la::vec<real>* grad, size_t i_start, size_t i_end) {
+        real t;
+
+        for (size_t i=i_start; i<i_end; i+=2) {
+            t = (*v)[i]*(*v)[i] + (*v)[i+1]*(*v)[i+1] + (*v)[i]*(*v)[i+1];
+            (*grad)[i] += 2*t*(2*(*v)[i] + (*v)[i+1]);
+            (*grad)[i] += 2*sin((*v)[i])*cos((*v)[i]);
+
+            (*grad)[i+1] += 2*t*(2*(*v)[i+1] + (*v)[i]);
+            (*grad)[i+1] -= 2*cos((*v)[i+1])*sin((*v)[i+1]);
+        }
+    }
+
+    static void calculate_hessian_job(const la::vec<real>* v, la::mat<real>* hess, size_t i_start, size_t i_end) {
+
+        for (size_t i=i_start; i<i_end; i+=2) {
+            // 0-0
+            real a = (*v)[i];
+            real b = (*v)[i+1];
+
+            (*hess)[i][i] = 2*(2*a+b)*(2*a+b) + 4*(a*a+a*b+b*b)
+                      + 2*cos(a)*cos(a) - 2*sin(a)*sin(a);
+
+            // 0-1
+            (*hess)[i+1][i] = 2*(2*a+b)*(a+2*b) + 2*(a*a+a*b+b*b);
+            (*hess)[i][i+1] = (*hess)[i+1][i];
+
+            // 1-1
+            (*hess)[i+1][i+1] = 2*(a+2*b)*(a+2*b) + 4*(a*a+a*b+b*b)
+                          - 2*cos(b)*cos(b) + 2*sin(b)*sin(b);
+        }
+    }
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0)
             throw "ext_psc1: n must be even and positive";
-        real z = 0;
-        for (size_t i=0; i<v.size(); i+=2) {
-            real t = v[i]*v[i] + v[i+1]*v[i+1] + v[i]*v[i+1];
-            z += t*t;
-            t = sin(v[i]);
-            z += t*t;
-            t = cos(v[i+1]);
-            z += t*t;
-        }
-        return z;
+
+        return function<real>::calculate_value_multithread(&v, ext_psc1<real>::calculate_f_job);
     }
 
     static la::vec<real> gradient(const la::vec<real>& v) {
         if (v.size() % 2 || v.size() == 0)
             throw "ext_psc1: n must be even and positive";
         la::vec<real> z(v.size(), 0.0);
-        for (size_t i=0; i<v.size(); i+=2) {
-            real t = v[i]*v[i] + v[i+1]*v[i+1] + v[i]*v[i+1];
-            z[i] += 2*t*(2*v[i] + v[i+1]);
-            z[i] += 2*sin(v[i])*cos(v[i]);
+        function<real>::calculate_gradient_multithread(&v, &z, ext_psc1<real>::calculate_grad_job);
 
-            z[i+1] += 2*t*(2*v[i+1] + v[i]);
-            z[i+1] -= 2*cos(v[i+1])*sin(v[i+1]);
-        }
         return z;
     }
 
@@ -43,22 +77,8 @@ public:
         if (v.size() % 2 || v.size() == 0)
             throw "ext_psc1: n must be even and positive";
         la::mat<real> z(v.size(), v.size(), 0.0);
-        for (size_t i=0; i<v.size(); i+=2) {
-            // 0-0
-            real a = v[i];
-            real b = v[i+1];
 
-            z[i][i] = 2*(2*a+b)*(2*a+b) + 4*(a*a+a*b+b*b)
-                      + 2*cos(a)*cos(a) - 2*sin(a)*sin(a);
-
-            // 0-1
-            z[i+1][i] = 2*(2*a+b)*(a+2*b) + 2*(a*a+a*b+b*b);
-            z[i][i+1] = z[i+1][i];
-
-            // 1-1
-            z[i+1][i+1] = 2*(a+2*b)*(a+2*b) + 4*(a*a+a*b+b*b)
-                          - 2*cos(b)*cos(b) + 2*sin(b)*sin(b);
-        }
+        function<real>::calculate_hessian_multithread(&v, &z, ext_psc1<real>::calculate_hessian_job);
 
         return z;
     }

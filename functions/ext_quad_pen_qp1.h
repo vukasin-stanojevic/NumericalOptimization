@@ -8,11 +8,33 @@ namespace function {
 
 template<class real>
 class ext_quad_pen_qp1 {
+private:
+    static void calculate_f_job(const la::vec<real>* v, std::promise<real>&& prom, size_t i_start, size_t i_end) {
+        real z = 0.0;
+        for (size_t i = i_start; i < i_end; i++) {
+            z += exp((*v)[i]) - sqrt(i+1)*(*v)[i];
+        }
+
+        prom.set_value(z);
+    }
+
+    static void calculate_grad_job(const la::vec<real>* v, la::vec<real>* grad, size_t i_start, size_t i_end) {
+        for (size_t i = i_start; i < i_end; i++) {
+            (*grad)[i] = exp((*v)[i]) - sqrt(i+1);
+        }
+    }
+
+    static void calculate_hessian_job(const la::vec<real>* v, la::mat<real>* hess, size_t i_start, size_t i_end) {
+        for (size_t i = i_start; i < i_end; i++) {
+            (*hess)[i][i] = exp((*v)[i]);
+        }
+    }
 public:
     static real func(const la::vec<real>& v) {
         if (v.size() == 0)
             throw "ext_quad_pen_qp1: n must be positive";
         auto n = v.size();
+
         real s1 = 0;
         real s2 = 0;
         for (size_t i=0; i<n-1; i++) {
