@@ -13,7 +13,7 @@
 #include <functional>
 
 namespace la {
-    int MAX_THREAD_NUM = 1;
+    int MAX_THREAD_NUM = 20;
 
 template<class T>
 class mat;
