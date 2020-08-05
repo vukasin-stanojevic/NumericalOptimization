@@ -11,11 +11,11 @@ namespace conjugate_gradient {
 template<class real>
 class dai_yuan : public base_method<real> {
 public:
-    dai_yuan() : base_method<real>(), nu(0.1) {}
-    dai_yuan(real nu) : base_method<real>(), nu(nu) {}
-    dai_yuan(real nu, real epsilon) : base_method<real>(epsilon), nu(nu) {}
-    dai_yuan(real nu, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), nu(nu) {}
-    dai_yuan(real nu, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), nu(nu) {}
+    dai_yuan() : base_method<real>(), nu(0.1) {this->method_name = "Dai-Yuan";}
+    dai_yuan(real nu) : base_method<real>(), nu(nu) {this->method_name = "Dai-Yuan";}
+    dai_yuan(real nu, real epsilon) : base_method<real>(epsilon), nu(nu) {this->method_name = "Dai-Yuan";}
+    dai_yuan(real nu, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), nu(nu) {this->method_name = "Dai-Yuan";}
+    dai_yuan(real nu, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), nu(nu) {this->method_name = "Dai-Yuan";}
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;

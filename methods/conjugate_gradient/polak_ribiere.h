@@ -11,11 +11,11 @@ namespace conjugate_gradient {
 template<class real>
 class polak_ribiere : public base_method<real> {
 public:
-    polak_ribiere() : base_method<real>(), nu(0.1) {}
-    polak_ribiere(real nu) : base_method<real>(), nu(nu) {}
-    polak_ribiere(real nu, real epsilon) : base_method<real>(epsilon), nu(nu) {}
-    polak_ribiere(real nu, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), nu(nu) {}
-    polak_ribiere(real nu, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), nu(nu) {}
+    polak_ribiere() : base_method<real>(), nu(0.1) {this->method_name = "Polak_Ribiere";}
+    polak_ribiere(real nu) : base_method<real>(), nu(nu) {this->method_name = "Polak_Ribiere";}
+    polak_ribiere(real nu, real epsilon) : base_method<real>(epsilon), nu(nu) {this->method_name = "Polak_Ribiere";}
+    polak_ribiere(real nu, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), nu(nu) {this->method_name = "Polak_Ribiere";}
+    polak_ribiere(real nu, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), nu(nu) {this->method_name = "Polak_Ribiere";}
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;

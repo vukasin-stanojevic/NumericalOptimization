@@ -34,8 +34,8 @@ int main() {
     // typedef opt::function::ext_white_and_holst<double> func;
     // typedef opt::function::ext_beale<double> func;
     // typedef opt::function::ext_penalty<double> func;
-    // typedef opt::function::hager_function<double> func;
-     typedef opt::function::ext_TET<double> func;
+     typedef opt::function::hager_function<double> func;
+    // typedef opt::function::ext_TET<double> func;
 
     // method::gradient::gradient_descent<double> opt;
     // method::gradient::momentum<double> opt;
@@ -54,8 +54,8 @@ int main() {
     // method::gradient::rms_prop<double> opt;
     // method::gradient::adam<double> opt;
     // method::gradient::adamax<double> opt;
-    // method::gradient::nadam<double> opt;
-     method::gradient::amsgrad<double> opt;
+     method::gradient::nadam<double> opt;
+    // method::gradient::amsgrad<double> opt;
 
     map<string, double> params;
     // line_search::binary<double> ls(params);
@@ -97,7 +97,7 @@ int main() {
     s += "method: " + opt.get_method_name();
     plt::title(s);
     plt::show();
-    
+
     // test(&opt, f, ls);
 
     return 0;

@@ -44,21 +44,46 @@ namespace opt {
                 if (v.size() == 0) {
                     throw "ext_penalty: n must be even and positive";
                 }
+                real z = 0.0;
+                real sqr = 0;
+                real tmp, tmp2;
 
-                return function<real>::calculate_value_multithread(&v, ext_penalty<real>::calculate_f_job);
+                for (size_t i = 0; i < v.size() - 1; i++) {
+                    tmp = v[i] - 1;
+                    z += tmp*tmp;
+                    sqr += v[i]*v[i];
+                }
+                sqr += v[v.size()-1] * v[v.size() - 1];
+                sqr -= 0.25;
+                sqr *= sqr;
+
+                return z + sqr;
             }
 
             static la::vec<real> gradient(const la::vec<real>& v) {
                 if (v.size() == 0) {
                     throw "ext_penalty: n must be even and positive";
                 }
+                la::vec<real> grad(v.size());
 
-                size_t n = v.size();
-                la::vec<real> grad(n, 1);
+                real s = 0.0;
+                real sqr = 0;
+                real tmp, tmp2;
 
-                real s = grad.dot(v*v) - 0.25*v.size(); // racuna sumu (v[i]*v[i] - 0.25) za svako i
+                for (size_t i = 0; i < v.size() - 1; i++) {
+                    s += v[i] - 1;
+                    sqr += v[i]*v[i];
+                }
+                sqr += v[v.size()-1] * v[v.size() - 1];
+                sqr -= 0.25;
 
-                return (v-1) * 2 + v*(4*s);
+
+                for (size_t i = 0; i < v.size() - 1; i++) {
+                    grad[i] = 2 * s + 4 * sqr * v[i];
+                }
+                grad[v.size()-1] = 4 * sqr * v[v.size() - 1];
+
+                return grad;
             }
 
             static la::mat<real> hessian(const la::vec<real>& v) {
@@ -70,7 +95,7 @@ namespace opt {
                 la::mat<real> hess(n, n);
 
                 la::vec<real> tmp(n, 1);
-                real s = tmp.dot(v*v) - 0.25*v.size();
+                real s = tmp.dot(v*v) - 0.25;
 
                 unsigned int processor_count = std::thread::hardware_concurrency();
                 processor_count = processor_count > la::MAX_THREAD_NUM ? la::MAX_THREAD_NUM : processor_count;

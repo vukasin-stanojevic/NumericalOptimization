@@ -11,11 +11,11 @@ namespace conjugate_gradient {
 template<class real>
 class cg_descent : public base_method<real> {
 public:
-    cg_descent(real eta = 0.01, real delta = 0.7) : base_method<real>(), eta(eta), delta(delta) {}
-    cg_descent(real eta, real delta, real epsilon) : base_method<real>(epsilon), eta(eta), delta(delta) {}
-    cg_descent(real eta, real delta, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), eta(eta), delta(delta) {}
+    cg_descent(real eta = 0.01, real delta = 0.7) : base_method<real>(), eta(eta), delta(delta) {this->method_name = "CG-Descent";}
+    cg_descent(real eta, real delta, real epsilon) : base_method<real>(epsilon), eta(eta), delta(delta) {this->method_name = "CG-Descent";}
+    cg_descent(real eta, real delta, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), eta(eta), delta(delta) {this->method_name = "CG-Descent";}
     cg_descent(real eta, real delta, real epsilon, size_t max_iter, real working_precision)
-        : base_method<real>(epsilon, max_iter, working_precision), eta(eta), delta(delta) {}
+        : base_method<real>(epsilon, max_iter, working_precision), eta(eta), delta(delta) {this->method_name = "CG-Descent";}
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;

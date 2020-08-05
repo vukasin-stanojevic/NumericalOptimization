@@ -11,16 +11,17 @@ namespace conjugate_gradient {
 template<class real>
 class fletcher_reeves : public base_method<real> {
 public:
-    fletcher_reeves() : base_method<real>(), nu(0.1) {}
-    fletcher_reeves(real nu) : base_method<real>(), nu(nu) {}
-    fletcher_reeves(real nu, real epsilon) : base_method<real>(epsilon), nu(nu) {}
-    fletcher_reeves(real nu, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), nu(nu) {}
-    fletcher_reeves(real nu, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), nu(nu) {}
+    fletcher_reeves() : base_method<real>(), nu(0.1) {this->method_name = "Fletcher-Reeves";}
+    fletcher_reeves(real nu) : base_method<real>(), nu(nu) {this->method_name = "Fletcher-Reeves";}
+    fletcher_reeves(real nu, real epsilon) : base_method<real>(epsilon), nu(nu) {this->method_name = "Fletcher-Reeves";}
+    fletcher_reeves(real nu, real epsilon, size_t max_iter) : base_method<real>(epsilon, max_iter), nu(nu) {this->method_name = "Fletcher-Reeves";}
+    fletcher_reeves(real nu, real epsilon, size_t max_iter, real working_precision) : base_method<real>(epsilon, max_iter, working_precision), nu(nu) {this->method_name = "Fletcher-Reeves";}
 
     void operator()(function::function<real>& f, line_search::base_line_search<real>& ls, la::vec<real>& x) {
         this->iter_count = 0;
         ls.clear_f_vals();
-        
+        this->gr_norms.clear();
+
         this->tic();
 
         real f_curr = f(x);
@@ -30,8 +31,10 @@ public:
         la::vec<real> gr_old;
 
         la::vec<real> pk = -gr;
+        real gr_norm = la::norm(gr);
+        this->gr_norms.push_back(gr_norm);
 
-        while (la::norm(gr) > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
+        while (gr_norm > this->epsilon && this->iter_count < this->max_iter && fabs(f_prev-f_curr)/(1+fabs(f_curr)) > this->working_precision) {
             ++this->iter_count;
             ls.push_f_val(f_curr);
             ls.set_current_f_val(f_curr);
@@ -55,6 +58,8 @@ public:
 
             pk *= beta_fr;
             pk -= gr;
+            gr_norm = la::norm(gr);
+            this->gr_norms.push_back(gr_norm);
         }
 
         this->toc();
