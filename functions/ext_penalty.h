@@ -13,19 +13,6 @@ namespace opt {
         template<class real>
         class ext_penalty {
         private:
-            static void calculate_f_job(const la::vec<real>* v, std::promise<real>&& prom, size_t i_start, size_t i_end) {
-                real z = 0.0;
-                real sqr = 0;
-                real tmp, tmp2;
-
-                for (size_t i = i_start; i < i_end; i++) {
-                    tmp = (*v)[i] - 1;
-                    tmp2 = (*v)[i]*(*v)[i] - 0.25;
-                    z += tmp;
-                    sqr += tmp2;
-                }
-                prom.set_value(z+sqr*sqr);
-            }
 
             static void calculate_hess_job(const la::vec<real>& v, real s, la::mat<real>& hess, size_t i_start, size_t i_end) {
                 for (size_t i = i_start; i < i_end; i++)
